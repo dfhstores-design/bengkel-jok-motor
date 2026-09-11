@@ -16,8 +16,8 @@ Status: **STAGING VALIDATED — PRODUCTION NOT DEPLOYED**
 - Apps Script staging version: version 21, description `Actor identity staging 2026-09-12`; anonymous access verified from the Vercel runtime.
 - Read-only endpoint checks: `listActiveJobs`, `listClosedJobs`, `getDashboard`, and `getRecap` returned successful JSON before synthetic write validation; subsequent synthetic records are documented below.
 - Vercel staging project: `aplikasi-bengkel-staging-20260912`.
-- Vercel preview deployment: `https://aplikasi-bengkel-staging-20260912-4vgwr9cll-dfhstores-projects.vercel.app`
-- Vercel deployment ID: `dpl_BSbtyBT8qusJwNNRpuj9A479NML4`.
+- Vercel preview deployment: `https://aplikasi-bengkel-staging-20260912-3t897mag7-dfhstores-projects.vercel.app`
+- Vercel deployment ID: `dpl_FqqACEbmL4XrC2BxWxL37qmvP1V4`.
 - Vercel target/status: `preview / Ready`.
 - Preview environment variable: encrypted `APPS_SCRIPT_API_URL`, pointing only to the staging Apps Script URL.
 - Local build: `npm run build` passed from `frontend`.
@@ -33,6 +33,7 @@ Status: **STAGING VALIDATED — PRODUCTION NOT DEPLOYED**
 - Exact automated mobile check passed on the approved local demo and Owner report: viewport `390x844`, document scroll width `390`, body scroll width `390`, and `horizontalOverflow=false`.
 - Authenticated preview browser validation passed at viewport `390x844`: Owner opened a CLOSED synthetic Job detail showing Payment and `Edit Riwayat Owner`; Operator mode showed the operational Job flow and did not show the Owner edit form. Both modes reported document/body scroll width `390` and `horizontalOverflow=false`.
 - Browser screenshots: `docs/staging-owner-detail-390x844.png` and `docs/staging-operator-390x844.png`.
+- A staging UI write test created synthetic `JOB-20260912-0003`. Initial UI refresh briefly showed the previous count because the post-write refresh was not awaited; the frontend now awaits the refresh after Job, Expense, and Close Job writes. No repeat submit was made, and readback confirmed exactly one active `JOB-20260912-0003`.
 - Staging auth foundation: an `AuthUsers` tab was created additively in the isolated staging Sheet with headers `user_id`, `display_name`, `role`, `pin_hash`, `active`, `created_at`, and `updated_at`. It contains two synthetic users only (`owner-demo` and `operator-demo`), with SHA-256 hashes and no plain PIN values. The staging Apps Script deployment was updated to version 10; no operational tab was changed.
 
 ## Backup evidence
@@ -117,6 +118,7 @@ Synthetic records were created only in the isolated staging Sheet and are clearl
 - Actor identity smoke: Apps Script version 21 direct POSTs returned `owner-demo (OWNER)` for Job, Payment, and Expense writes; an Operator Expense write returned `operator-demo (OPERATOR)`. No production endpoint was called.
 - Authenticated preview matrix: unauthenticated `/api/dashboard` returned `401`; Owner login returned `200`; authenticated `/api/auth/session`, `/api/dashboard`, `/api/history`, `/api/expenses`, `/api/recap`, and `/api/auth/users` returned `200` with successful payloads. Staging readback contained 2 CLOSED history Jobs and 3 synthetic Expenses. Logout returned `200`, followed by `/api/dashboard` returning `401`.
 - Authenticated UI smoke: preview login loaded the dynamic user dropdown; Owner mode rendered `Beranda Owner`, dashboard/recap, Job start form, CLOSED history, Expense form, and Owner edit detail; Operator mode rendered `MOTOKRAF · OPERATOR` and the Job start flow while hiding Owner-only history/expense editing areas.
+- Updated frontend preview: `https://aplikasi-bengkel-staging-20260912-3t897mag7-dfhstores-projects.vercel.app`, deployment `dpl_FqqACEbmL4XrC2BxWxL37qmvP1V4`, Ready after the refresh-race fix. Unauthenticated Dashboard returned `401`; authenticated Dashboard returned `200` with exactly 1 active synthetic Job (`JOB-20260912-0003`).
 - Production smoke test: not run as a mutating test; live production remains unchanged.
 
 ## Rollback procedure
