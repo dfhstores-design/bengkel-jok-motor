@@ -19,7 +19,8 @@ Scope: Initial read-only audit for migrating the latest Basil UI / Motokraf desi
 - Git status: untracked source, reports, demos, screenshots, archives, and QA folders.
 - HEAD/commit: **NONE**; `master` has no commits.
 - Origin remote: **NONE**.
-- Rollback baseline: **BLOCKED**. A deployment/version rollback cannot be tied to a versioned repository baseline until a clean, approved baseline is established.
+- Rollback baseline: **PARTIAL PASS**. GitHub checkpoint branch is versioned at `74c0788b8ed8430a812b05cd3cc57a2cdd4ad6e0`; Vercel active production deployment and prior READY production deployment lineage are identifiable. Apps Script rollback lineage remains unverified.
+- Production Vercel deployment: **VERIFIED READY**; active deployment ID `dpl_B7CfXhY12Zzedq2SiGKSc52DXgyn`, production alias `aplikasi-bengkel-sprint0.vercel.app`.
 - Local dependencies: **INCOMPLETE**; `frontend\node_modules` is absent and only `node_modules.incomplete-20260911` exists.
 
 ## Source and demo comparison
@@ -77,22 +78,25 @@ Scope: Initial read-only audit for migrating the latest Basil UI / Motokraf desi
 
 ## Backup evidence
 
-**NOT CREATED / NOT VERIFIED.** No production backup was attempted because the available repository/configuration did not provide a safe, current, custody-preserving export path, and production write/cleanup behavior is explicitly prohibited by the migration guardrails.
+**PASS WITH LIMITATION.** A Drive copy was created and read back as `BACKUP_PRODUCTION_MVP_DATA_STORE_2026-09-11_2355`. A local XLSX export is stored at `D:\Documents\AI-GPT\Aplikasi Bengkel Jok Motor\backups\BACKUP_PRODUCTION_MVP_DATA_STORE_2026-09-11_2355.xlsx`.
+
+- Drive copy: four expected tabs visible — `Jobs`, `Payments`, `Expenses`, `Media`.
+- Local export: 13,884 bytes.
+- Local SHA-256: `444456363297C897A118210F6EDDC01717856C0276EDF4A0B2009E0533BDA587`.
+- Limitation: this is backup/export evidence, not yet a pre/post migration integrity comparison because migration has not started.
 
 ## Unresolved blockers
 
-1. No Git commit or remote baseline for a safe migration branch and rollback.
-2. Current production Apps Script deployment/version, Sheet identity, Drive mapping, and active configuration are not independently verified.
-3. No verified production backup/export with timestamp, checksum, and read-back evidence.
-4. Local dependency installation is incomplete; build/static/render QA cannot yet be treated as current evidence.
-5. The latest demo uses synthetic localStorage data and does not establish backend-integrated production behavior.
-6. Authentication/authorization and Owner/Operator mode switching require explicit production-scope verification; current source labels mode switching as display-only.
+1. Current production Apps Script deployment/version and active configuration are not independently verified.
+2. Preview/staging deployment and isolated backend/Sheet path are not yet established.
+3. Local dependency installation is incomplete; build/static/render QA cannot yet be treated as current evidence.
+4. The latest demo uses synthetic localStorage data and does not establish backend-integrated production behavior.
+5. Authentication/authorization and Owner/Operator mode switching require explicit production-scope verification; current source labels mode switching as display-only.
 
 ## Data-safety confirmation
 
-During this audit, no operational data was deleted, reset, moved, edited, or supplemented with dummy data. No production deployment, schema/API migration, cleanup endpoint, Apps Script write, Sheet write, Drive write, or Vercel mutation was performed.
+During this audit, no operational data was deleted, reset, moved, edited, or supplemented with dummy data. The only Drive write was the explicitly requested backup copy; the production spreadsheet, Apps Script, Sheets tabs, Drive media, and Vercel production deployment were not changed.
 
 ## Decision
 
-**Do not deploy. Do not claim migration success.** Resume only after the rollback baseline, current live deployment/resource identity, custody-safe backup/export, and local dependency/build gates are resolved.
-
+**Do not deploy. Do not claim migration success.** Backup/export and Vercel rollback evidence are now available. Resume only after current Apps Script version/resource identity, staging separation, and local dependency/build gates are resolved.
