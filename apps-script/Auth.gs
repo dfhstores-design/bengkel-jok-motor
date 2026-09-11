@@ -37,6 +37,10 @@ function requireAuth_(e, body, role) {
   return session;
 }
 
+function actorFromSession_(session) {
+  return session.user_id + ' (' + session.role + ')';
+}
+
 function login_(e) {
   var body = parseBody_(e), userId = text_(body.user_id), pin = text_(body.pin);
   if (!userId || !pin) return fail_('AUTH_CREDENTIALS_REQUIRED');

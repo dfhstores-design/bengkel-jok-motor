@@ -301,13 +301,13 @@ function createJob_(e) {
   var lock = LockService.getScriptLock();
   try {
     lock.waitLock(15000);
-    var body = parseBody_(e), key = requestKey_(body), prior = idempotentResult_('createJob', key);
+    var body = parseBody_(e), session = requireAuth_(e, body, null), key = requestKey_(body), prior = idempotentResult_('createJob', key);
     if (prior) return prior;
     var input = validateJobInput_(body);
     var sheet = getSheet_(APP.SHEETS.JOBS);
     var now = nowIso_();
     var id = generateEntityId_('JOB');
-    var actor = actorLabel_();
+    var actor = actorFromSession_(session);
     var record = {
       job_id: id, created_at: now, created_by: actor, updated_at: now, updated_by: actor,
       status: 'IN_PROGRESS', motorcycle_model: input.motorcycle_model,
@@ -464,7 +464,7 @@ function closeJob_(e) {
   var jobId = null;
   lock.waitLock(15000);
   try {
-    var body = parseBody_(e), key = requestKey_(body), prior = idempotentResult_('closeJob', key);
+    var body = parseBody_(e), session = requireAuth_(e, body, null), key = requestKey_(body), prior = idempotentResult_('closeJob', key);
     if (prior) return prior;
     var input = validatePaymentInput_(body);
     jobId = input.job_id;
@@ -492,7 +492,7 @@ function closeJob_(e) {
 
     var now = nowIso_();
     paymentId = generateEntityId_('PAYMENT');
-    var actor = actorLabel_();
+    var actor = actorFromSession_(session);
     var payment = { payment_id: paymentId, job_id: jobId, created_at: now, created_by: actor, updated_at: now, updated_by: actor, amount: input.amount, payment_method: input.payment_method, note: input.note, proof_media_id: '' };
     paymentSheet.appendRow(paymentHeaders.map(function(header) { return payment[header] == null ? '' : payment[header]; }));
     paymentRow = paymentSheet.getLastRow();
@@ -574,7 +574,7 @@ function addJobMedia_(e) {
   var mediaId = null;
   var jobId = null;
   try {
-    var body = parseBody_(e), key = requestKey_(body), prior = idempotentResult_('addJobMedia', key);
+    var body = parseBody_(e), session = requireAuth_(e, body, null), key = requestKey_(body), prior = idempotentResult_('addJobMedia', key);
     if (prior) return prior;
     var input = validateMediaInput_(body);
     jobId = input.job_id;
@@ -591,7 +591,7 @@ function addJobMedia_(e) {
     driveFile = jobFolder.createFile(blob);
     var now = nowIso_();
     mediaId = generateEntityId_('MEDIA');
-    var actor = actorLabel_();
+    var actor = actorFromSession_(session);
     var record = { media_id: mediaId, created_at: now, created_by: actor, updated_at: now, updated_by: actor, owner_type: 'JOB', owner_id: jobId, category: input.category, media_type: input.media_type, drive_file_id: driveFile.getId(), drive_file_url: driveFile.getUrl(), file_name: input.file_name, mime_type: input.mime_type, file_size_bytes: input.file_size_bytes, notes: input.notes };
     var sheet = getSheet_(APP.SHEETS.MEDIA);
     var headers = headers_(sheet);
@@ -638,10 +638,10 @@ function createExpense_(e) {
   var lock = LockService.getScriptLock();
   try {
     lock.waitLock(15000);
-    var body = parseBody_(e), key = requestKey_(body), prior = idempotentResult_('createExpense', key);
+    var body = parseBody_(e), session = requireAuth_(e, body, null), key = requestKey_(body), prior = idempotentResult_('createExpense', key);
     if (prior) return prior;
     var input = validateExpenseInput_(body);
-    var sheet = getSheet_(APP.SHEETS.EXPENSES), now = nowIso_(), id = generateEntityId_('EXPENSE'), actor = actorLabel_();
+    var sheet = getSheet_(APP.SHEETS.EXPENSES), now = nowIso_(), id = generateEntityId_('EXPENSE'), actor = actorFromSession_(session);
     var record = { expense_id: id, expense_date: Utilities.formatDate(new Date(), APP.TIMEZONE, 'yyyy-MM-dd'), created_at: now, created_by: actor, updated_at: now, updated_by: actor, category: input.category, item_name: input.item_name, quantity: input.quantity, unit: input.unit, total_amount: input.total_amount, unit_price: input.unit_price, supplier: input.supplier, receipt_media_id: '', notes: input.notes };
     var headers = headers_(sheet);
     sheet.appendRow(headers.map(function(header) { return record[header] == null ? '' : record[header]; }));
@@ -674,7 +674,7 @@ function listExpenseMedia_(expenseId) {
 function addExpenseReceipt_(e) {
   var driveFile = null, mediaId = null, expenseId = null;
   try {
-    var body = parseBody_(e), key = requestKey_(body), prior = idempotentResult_('addExpenseReceipt', key); if (prior) return prior;
+    var body = parseBody_(e), session = requireAuth_(e, body, null), key = requestKey_(body), prior = idempotentResult_('addExpenseReceipt', key); if (prior) return prior;
     expenseId = text_(body.expense_id);
     if (!expenseId || !allExpenseRecords_().some(function(item) { return String(item.expense_id) === expenseId; })) throw new Error('EXPENSE_NOT_FOUND');
     var mime = text_(body.mime_type).toLowerCase(), fileName = text_(body.file_name), encoded = text_(body.file_base64), size = Number(body.file_size_bytes);
@@ -682,7 +682,7 @@ function addExpenseReceipt_(e) {
     if (size > MEDIA_MAX_BYTES_) throw new Error('MEDIA_FILE_TOO_LARGE');
     var folder = getFolderByConfigKey_('mediaExpensesFolderId');
     driveFile = folder.createFile(Utilities.newBlob(Utilities.base64Decode(encoded), mime, fileName));
-    mediaId = generateEntityId_('MEDIA'); var now = nowIso_(), actor = actorLabel_();
+    mediaId = generateEntityId_('MEDIA'); var now = nowIso_(), actor = actorFromSession_(session);
     var record = { media_id: mediaId, created_at: now, created_by: actor, updated_at: now, updated_by: actor, owner_type: 'EXPENSE', owner_id: expenseId, category: 'RECEIPT', media_type: 'PHOTO', drive_file_id: driveFile.getId(), drive_file_url: driveFile.getUrl(), file_name: fileName, mime_type: mime, file_size_bytes: size, notes: text_(body.notes) };
     var mediaSheet = getSheet_(APP.SHEETS.MEDIA), headers = headers_(mediaSheet);
     mediaSheet.appendRow(headers.map(function(header) { return record[header] == null ? '' : record[header]; }));

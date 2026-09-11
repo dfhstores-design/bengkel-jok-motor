@@ -10,11 +10,11 @@ Status: **STAGING VALIDATED — PRODUCTION NOT DEPLOYED**
 
 ## Staging deployment evidence
 
-- Apps Script staging deployment URL: `https://script.google.com/macros/s/AKfycbztGm1dnZt1FF42V0DD2B-T4BEYQ06aATxeUBhcNHhlehl1Pp8eOTATHMVxp-PQ0XHvsw/exec`
+- Apps Script staging deployment URL: `https://script.google.com/macros/s/AKfycbxZbHhW7c_QaRGcPna5Usj5RCNhztwDDGohJiChsNRcyBJ8oMbCj3ra6C-DN3QJ8ipMHg/exec`
 - Access policy: Anyone, execute as owner, based on the supplied deployment evidence.
 - Apps Script staging project: `Aplikasi Bengkel Jok - API Staging 2026-09-12`.
-- Apps Script staging version: version 20, description `Owner history edit UI staging 2026-09-12`; anonymous access verified from the Vercel runtime.
-- Read-only endpoint checks: `listActiveJobs`, `listClosedJobs`, `getDashboard`, and `getRecap` returned successful JSON against the empty staging datastore.
+- Apps Script staging version: version 21, description `Actor identity staging 2026-09-12`; anonymous access verified from the Vercel runtime.
+- Read-only endpoint checks: `listActiveJobs`, `listClosedJobs`, `getDashboard`, and `getRecap` returned successful JSON before synthetic write validation; subsequent synthetic records are documented below.
 - Vercel staging project: `aplikasi-bengkel-staging-20260912`.
 - Vercel preview deployment: `https://aplikasi-bengkel-staging-20260912-4vgwr9cll-dfhstores-projects.vercel.app`
 - Vercel deployment ID: `dpl_BSbtyBT8qusJwNNRpuj9A479NML4`.
@@ -57,11 +57,11 @@ Status: **STAGING VALIDATED — PRODUCTION NOT DEPLOYED**
 
 - Production Apps Script endpoint accepted a direct unauthenticated read-only `getDashboard` request and returned operational summary data.
 - Frontend mode switching is client-side state only. It does not establish identity, session, or role authorization.
-- Apps Script source derives `created_by` and `updated_by` from the deployment Script Property `ACTOR_LABEL`, not from a verified request principal.
+- All new operational write functions in the staging source require a valid session and derive `created_by`/`updated_by` from the verified session identity; production remains unchanged.
 - No unauthenticated write probe was attempted because it could create or mutate production data.
-- Result: **BLOCKED — AUTHORIZATION CONTRACT REQUIRED**. Do not enable production Owner edit-history or promote the new write-capable frontend until authentication, role checks, session expiry, audit identity, and server-side authorization are specified and tested in isolated staging.
+- Initial result was **BLOCKED — AUTHORIZATION CONTRACT REQUIRED**. The contract is now documented and the required authentication, role, expiry, audit, and server-side authorization checks have been exercised in isolated staging; this does not authorize production enablement.
 - Owner-approved personal-use contract is documented in `docs/AUTHORIZATION_CONTRACT_2026-09-12.md`: hashed PINs and roles in `AuthUsers`, login role dropdown, Owner-managed users, six-hour idle expiry for both roles, server-derived actor identity, and restricted Owner history edits with audit evidence.
-- Auth backend, frontend session wiring, and restricted Owner history edit are implemented in the isolated staging project and are not enabled in production. The staging-only smoke test passed for login, role denial, invalid PIN rejection, logout invalidation, and PIN non-exposure. Direct operational Apps Script actions now require a valid session; Vercel routes require the HttpOnly session cookie. Owner edit created an `AUDIT-*` row and Operator edit was rejected.
+- Auth backend, frontend session wiring, restricted Owner history edit, and session-derived actor identity are implemented in the isolated staging project and are not enabled in production. The staging-only smoke test passed for login, role denial, invalid PIN rejection, logout invalidation, and PIN non-exposure. Direct operational Apps Script actions now require a valid session; Vercel routes require the HttpOnly session cookie. Owner edit created an `AUDIT-*` row and Operator edit was rejected.
 
 ## Files and components changed
 
@@ -84,6 +84,8 @@ Synthetic records were created only in the isolated staging Sheet and are clearl
 - History result: one CLOSED Job with its linked Payment.
 - Recap result: income `125000`, expense `15000`, difference `110000`, CLOSED count `1`, `inconsistencies=[]`.
 - No duplicate synthetic Job, Payment, or Expense IDs observed.
+- Actor identity smoke on Apps Script version 21: `JOB-20260912-0002` created and closed by `owner-demo (OWNER)`; linked `PAY-20260912-0002` has the same creator; `EXP-20260912-0002` has the same creator/updater. A separate `EXP-20260912-0003` created by Operator is attributed to `operator-demo (OPERATOR)`.
+- These additional records are synthetic staging records and were not deleted after validation.
 - Media upload was not exercised because it requires a binary fixture; no media data was created.
 
 ## Acceptance criteria
@@ -100,7 +102,7 @@ Synthetic records were created only in the isolated staging Sheet and are clearl
 | Excel download | PASS | User-provided `.xls` file parses successfully, has the expected worksheet and headers, and matches the PDF summary and transaction totals. |
 | Motokraf logo correct | PASS | Official checkpoint asset is present in the frontend. |
 | Mobile 390x844 without horizontal overflow | PASS | Automated exact viewport check passed on Owner report with no horizontal overflow. |
-| Production version/commit identifiable | PASS WITH LIMITATION | Preview deployment `https://aplikasi-bengkel-staging-20260912-c5bnb8n4r-dfhstores-projects.vercel.app` is Ready; production version remains unchanged. |
+| Production version/commit identifiable | PASS WITH LIMITATION | Preview deployment `https://aplikasi-bengkel-staging-20260912-c5bnb8n4r-dfhstores-projects.vercel.app` is Ready; staging Apps Script version 21 is identified; production version remains unchanged. |
 | Rollback remains possible | PASS | Previous production Vercel deployment and Apps Script versions remain available; no rollback executed. |
 
 ## Smoke test
@@ -110,6 +112,7 @@ Synthetic records were created only in the isolated staging Sheet and are clearl
 - GAS staging public endpoint: deployment `AKfycbxZbHhW7c_QaRGcPna5Usj5RCNhztwDDGohJiChsNRcyBJ8oMbCj3ra6C-DN3QJ8ipMHg` returned two synthetic users anonymously from the Vercel runtime.
 - Vercel Preview authenticated smoke: `https://aplikasi-bengkel-staging-20260912-ejorggenp-dfhstores-projects.vercel.app`, deployment `dpl_Dkkva1xp7Rmu8AzrpjQKDkjFspjw`, status Ready. `/api/auth/users` returned 2 users; unauthenticated Dashboard returned 401; Owner login and session returned success; Dashboard after login returned success; logout returned success; Dashboard after logout returned 401.
 - Owner history edit smoke: Preview deployment `https://aplikasi-bengkel-staging-20260912-c5bnb8n4r-dfhstores-projects.vercel.app`, deployment `dpl_nkz7AAuq8EpoaGHwK77akqUYaqFs`; Owner edit of synthetic `JOB-20260912-0001` returned success with an audit ID, staging `AuditLog` reached 2 rows, and Operator edit returned failure with `AUTH_ROLE_FORBIDDEN`.
+- Actor identity smoke: Apps Script version 21 direct POSTs returned `owner-demo (OWNER)` for Job, Payment, and Expense writes; an Operator Expense write returned `operator-demo (OPERATOR)`. No production endpoint was called.
 - Production smoke test: not run as a mutating test; live production remains unchanged.
 
 ## Rollback procedure
@@ -135,4 +138,4 @@ No operational data was changed or deleted by this validation. The only writes a
 
 ## Decision
 
-**Do not deploy production yet.** The production read-only integrity baseline, PDF/Excel evidence, mobile viewport check, staging authenticated smoke, and synthetic Owner edit/audit pass. Production migration remains blocked by incomplete authenticated browser evidence for all business flows and by the need to bind actor identity consistently to every new operational write before promotion.
+**Do not deploy production yet.** The production read-only integrity baseline, PDF/Excel evidence, mobile viewport check, staging authenticated smoke, synthetic Owner edit/audit pass, and session-derived actor identity checks pass. Production migration remains blocked by incomplete authenticated browser evidence for all business flows and by the need for an explicit production release gate; production authorization and data writes remain untouched.
