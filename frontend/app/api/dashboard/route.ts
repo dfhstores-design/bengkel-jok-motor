@@ -1,2 +1,2 @@
-import { NextResponse } from "next/server";
-export async function GET(){const base=process.env.APPS_SCRIPT_API_URL;if(!base)return NextResponse.json({success:false,data:null,message:"APPS_SCRIPT_API_URL belum dikonfigurasi."},{status:500});const url=new URL(base);url.searchParams.set("action","getDashboard");try{return NextResponse.json(await fetch(url,{cache:"no-store"}).then(r=>r.json()))}catch{return NextResponse.json({success:false,data:null,message:"Dashboard gagal terhubung ke backend."},{status:500})}}
+import { backendUrl, forwardBackend } from "@/lib/backend";
+export async function GET(){const result=await backendUrl("getDashboard");if("error" in result)return result.error;return forwardBackend(result.url)}

@@ -53,10 +53,19 @@ function logout_(e) {
   return ok_(null, 'Logout berhasil.');
 }
 
+function session_(e) {
+  var session = requireAuth_(e, null, null);
+  return ok_({ user_id: session.user_id, display_name: session.display_name, role: session.role, last_activity: session.last_activity }, 'Sesi aktif.');
+}
+
 function listAuthUsers_(e) {
   var body = {}; try { body = parseBody_(e); } catch (ignore) {}
   requireAuth_(e, body, 'OWNER');
   return ok_(authRows_().map(function(row) { return { user_id: row.user_id, display_name: row.display_name, role: row.role, active: row.active }; }), 'Daftar user berhasil dimuat.');
+}
+
+function listLoginUsers_() {
+  return ok_(authRows_().filter(function(row) { return text_(row.active).toLowerCase() !== 'false'; }).map(function(row) { return { user_id: row.user_id, display_name: row.display_name, role: row.role }; }), 'Daftar login berhasil dimuat.');
 }
 
 function createAuthUser_(e) {

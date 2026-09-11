@@ -13,7 +13,7 @@ Status: **STAGING VALIDATED — PRODUCTION NOT DEPLOYED**
 - Apps Script staging deployment URL: `https://script.google.com/macros/s/AKfycbztGm1dnZt1FF42V0DD2B-T4BEYQ06aATxeUBhcNHhlehl1Pp8eOTATHMVxp-PQ0XHvsw/exec`
 - Access policy: Anyone, execute as owner, based on the supplied deployment evidence.
 - Apps Script staging project: `Aplikasi Bengkel Jok - API Staging 2026-09-12`.
-- Apps Script staging version: version 10, description `Auth staging smoke evidence 2026-09-12`.
+- Apps Script staging version: version 12, description `Server-side action gate staging 2026-09-12`.
 - Read-only endpoint checks: `listActiveJobs`, `listClosedJobs`, `getDashboard`, and `getRecap` returned successful JSON against the empty staging datastore.
 - Vercel staging project: `aplikasi-bengkel-staging-20260912`.
 - Vercel preview deployment: `https://aplikasi-bengkel-staging-20260912-4vgwr9cll-dfhstores-projects.vercel.app`
@@ -61,7 +61,7 @@ Status: **STAGING VALIDATED — PRODUCTION NOT DEPLOYED**
 - No unauthenticated write probe was attempted because it could create or mutate production data.
 - Result: **BLOCKED — AUTHORIZATION CONTRACT REQUIRED**. Do not enable production Owner edit-history or promote the new write-capable frontend until authentication, role checks, session expiry, audit identity, and server-side authorization are specified and tested in isolated staging.
 - Owner-approved personal-use contract is documented in `docs/AUTHORIZATION_CONTRACT_2026-09-12.md`: hashed PINs and roles in `AuthUsers`, login role dropdown, Owner-managed users, six-hour idle expiry for both roles, server-derived actor identity, and restricted Owner history edits with audit evidence.
-- Auth backend foundation is implemented in the isolated staging project and is not enabled in production. The staging-only smoke test passed for login, role denial, invalid PIN rejection, logout invalidation, and PIN non-exposure. Full business-action gating and frontend session wiring remain open.
+- Auth backend and frontend foundation is implemented in the isolated staging project and is not enabled in production. The staging-only smoke test passed for login, role denial, invalid PIN rejection, logout invalidation, and PIN non-exposure. Direct operational Apps Script actions now require a valid session; Vercel routes require the HttpOnly session cookie.
 
 ## Files and components changed
 
@@ -92,7 +92,7 @@ Synthetic records were created only in the isolated staging Sheet and are clearl
 |---|---|---|
 | New design appears at live production URL | NOT EXERCISED | Production deployment intentionally unchanged; preview is the validation target. |
 | Owner and Operator latest flows usable | PASS WITH LIMITATION | Local source and protected Vercel preview render the new flow; secure production auth/mode contract remains unverified. |
-| Login and mode switching | PASS WITH LIMITATION | Staging backend auth smoke test passed; frontend login/session wiring and production authorization are not enabled. |
+| Login and mode switching | PASS WITH LIMITATION | Staging backend auth smoke test passed and frontend login/session wiring builds successfully; production authorization is not enabled. |
 | Existing operational data readable without change | PASS WITH LIMITATION | Read-only live-versus-backup business-content comparison passed; this is a point-in-time baseline, not a post-production-migration comparison. |
 | No data loss or duplicate operational IDs | PASS WITH LIMITATION | Jobs, Payments, Expenses, and Media ID sets match backup with zero duplicates; no migration write has occurred yet. |
 | Dashboard/report consistency | PASS | Live Dashboard and Recap totals are internally consistent and report zero inconsistencies. |
@@ -100,7 +100,7 @@ Synthetic records were created only in the isolated staging Sheet and are clearl
 | Excel download | PASS | User-provided `.xls` file parses successfully, has the expected worksheet and headers, and matches the PDF summary and transaction totals. |
 | Motokraf logo correct | PASS | Official checkpoint asset is present in the frontend. |
 | Mobile 390x844 without horizontal overflow | PASS | Automated exact viewport check passed on Owner report with no horizontal overflow. |
-| Production version/commit identifiable | PASS WITH LIMITATION | Preview deployment ID is identified; production version remains unchanged. |
+| Production version/commit identifiable | PASS WITH LIMITATION | Preview deployment `https://aplikasi-bengkel-staging-20260912-6lmxb68uf-dfhstores-projects.vercel.app` is Ready; production version remains unchanged. |
 | Rollback remains possible | PASS | Previous production Vercel deployment and Apps Script versions remain available; no rollback executed. |
 
 ## Smoke test
@@ -121,7 +121,7 @@ Synthetic records were created only in the isolated staging Sheet and are clearl
 
 - A post-migration comparison cannot exist until a future production deployment is explicitly approved; the current pre-deployment live-versus-backup baseline is complete.
 - Production authentication/authorization and Owner edit-history authorization are not implemented or approved for migration.
-- Staging Web App anonymous accessibility is unresolved; the deployment UI currently requires a separate verification from an external browser/session.
+- Staging Web App anonymous accessibility remains unresolved from terminal verification; the deployment UI previously showed a Google-account access policy and the external runtime returned an access error. This must be resolved before end-to-end browser login can be marked PASS.
 - The production endpoint is publicly readable without a verified user session. A server-side authorization design and staging-only test plan are required before any write-capable production release.
 - PDF, Excel, and exact automated 390x844 viewport validation are complete.
 - No code or production resource was changed while performing the export and mobile checks.
@@ -133,4 +133,4 @@ No operational data was changed or deleted by this validation. The only writes a
 
 ## Decision
 
-**Do not deploy production yet.** The production read-only integrity baseline, PDF/Excel evidence, mobile viewport check, and staging auth foundation pass. Production migration remains blocked until frontend session wiring, global business-action authorization, audit evidence, Owner edit-history implementation, and rollback-ready staging verification are complete.
+**Do not deploy production yet.** The production read-only integrity baseline, PDF/Excel evidence, mobile viewport check, and staging auth foundation pass. Production migration remains blocked by unresolved staging Web App access, missing audit/edit-history implementation, and incomplete end-to-end authenticated browser evidence.

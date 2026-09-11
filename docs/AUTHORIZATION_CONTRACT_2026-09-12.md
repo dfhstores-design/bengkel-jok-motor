@@ -57,9 +57,9 @@ Scope: Personal workshop discipline and business insight. This is intentionally 
 
 ## Current implementation boundary
 
-- Staging Apps Script now has additive `AuthUsers` support, SHA-256 PIN verification, UUID session references, six-hour idle expiry, logout invalidation, Owner-only user listing, and Owner-only user creation.
+- Staging Apps Script now has additive `AuthUsers` support, SHA-256 PIN verification, UUID session references, six-hour idle expiry, logout invalidation, Owner-only user listing, Owner-only user creation, and server-side session gating for operational actions.
 - The staging-only smoke test passed for Owner login, Operator login, invalid PIN rejection, Owner-only authorization, logout invalidation, and no PIN exposure in returned data.
-- Existing operational actions are not yet globally gated by `requireAuth_`; the frontend login/session wiring and per-action authorization remain the next implementation package.
+- Frontend login/session wiring is implemented in the staging candidate. Direct operational Apps Script actions are also gated by `requireAuth_`; production remains unchanged.
 
 ## Production gate
 

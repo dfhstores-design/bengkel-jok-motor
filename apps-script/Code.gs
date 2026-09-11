@@ -212,9 +212,13 @@ function doPost(e) {
 function handleRequest_(e) {
   const action = e && e.parameter ? e.parameter.action : null;
   try {
+    var protectedActions = ['healthCheck', 'createJob', 'listActiveJobs', 'listClosedJobs', 'getDashboard', 'getRecap', 'getJob', 'closeJob', 'addJobMedia', 'listJobMedia', 'createExpense', 'listExpenses', 'addExpenseReceipt', 'listExpenseMedia'];
+    if (protectedActions.indexOf(action) >= 0) requireAuth_(e, null, null);
     if (action === 'login') return jsonOutput_(login_(e));
     if (action === 'logout') return jsonOutput_(logout_(e));
+    if (action === 'session') return jsonOutput_(session_(e));
     if (action === 'listAuthUsers') return jsonOutput_(listAuthUsers_(e));
+    if (action === 'listLoginUsers') return jsonOutput_(listLoginUsers_());
     if (action === 'createAuthUser') return jsonOutput_(createAuthUser_(e));
     if (action === 'healthCheck') return jsonOutput_(healthCheck_());
 
