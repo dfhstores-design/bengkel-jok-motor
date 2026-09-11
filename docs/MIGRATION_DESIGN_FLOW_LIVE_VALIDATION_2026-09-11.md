@@ -90,6 +90,7 @@ Scope: Initial read-only audit for migrating the latest Basil UI / Motokraf desi
 2. The local browser validation uses an unconfigured API boundary, so no production or real operational write was attempted.
 3. Authentication/authorization and Owner/Operator mode switching require explicit production-scope verification; current source labels mode switching as display-only.
 4. Owner edit-history cannot be enabled safely until a reviewed backend endpoint, authorization rule, audit behavior, and non-destructive test path are provided.
+5. Vercel preview environment is not defined; CLI could identify the production project but could not resolve a custom preview environment. No preview deployment was created.
 
 ## Data-safety confirmation
 
