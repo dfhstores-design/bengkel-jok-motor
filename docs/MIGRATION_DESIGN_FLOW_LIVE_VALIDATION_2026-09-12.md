@@ -30,6 +30,7 @@ Status: **STAGING VALIDATED — PRODUCTION NOT DEPLOYED**
 - Existing approved 390x844 visual evidence remains valid for layout review, but a fresh automated exact-viewport run is still pending.
 - User-provided PDF evidence `D:\Download\laporan-motokraf-september-2026 (1).pdf` was read and rendered successfully: 1 A4 page, unencrypted, text extraction succeeded, and visual review found no clipping or overlap. Values matched the demo report: income Rp470.000, expense Rp200.000, margin Rp270.000, 2 CLOSED, and 1 active Job.
 - User-provided Excel evidence `D:\Download\laporan-motokraf-september-2026.xls` was parsed successfully as SpreadsheetML: worksheet `Laporan`, September 2026, 3 transactions, 2 CLOSED, 1 active Job, Payment total Rp470.000, CLOSED deal total Rp470.000, and duplicate Job ID 0. Summary values match the PDF.
+- Exact automated mobile check passed on the approved local demo and Owner report: viewport `390x844`, document scroll width `390`, body scroll width `390`, and `horizontalOverflow=false`.
 
 ## Backup evidence
 
@@ -85,7 +86,7 @@ Synthetic records were created only in the isolated staging Sheet and are clearl
 | PDF download | PASS | User-provided downloaded PDF is readable and visually valid; report values match the demo. |
 | Excel download | PASS | User-provided `.xls` file parses successfully, has the expected worksheet and headers, and matches the PDF summary and transaction totals. |
 | Motokraf logo correct | PASS | Official checkpoint asset is present in the frontend. |
-| Mobile 390x844 without horizontal overflow | PASS WITH LIMITATION | Approved local 390x844 visual and responsive CSS; preview browser viewport evidence remains pending. |
+| Mobile 390x844 without horizontal overflow | PASS | Automated exact viewport check passed on Owner report with no horizontal overflow. |
 | Production version/commit identifiable | PASS WITH LIMITATION | Preview deployment ID is identified; production version remains unchanged. |
 | Rollback remains possible | PASS | Previous production Vercel deployment and Apps Script versions remain available; no rollback executed. |
 
@@ -107,8 +108,8 @@ Synthetic records were created only in the isolated staging Sheet and are clearl
 
 - A post-migration comparison cannot exist until a future production deployment is explicitly approved; the current pre-deployment live-versus-backup baseline is complete.
 - Production authentication/authorization and Owner edit-history authorization contract are not yet approved for migration.
-- Exact automated 390x844 viewport validation is still pending; PDF and Excel file-level validation is complete.
-- The export and mobile checks are tooling-limited; no code or production resource was changed while attempting them.
+- PDF, Excel, and exact automated 390x844 viewport validation are complete.
+- No code or production resource was changed while performing the export and mobile checks.
 - An isolated Vercel project named `repo-checkout` was accidentally created by an earlier root-level deploy attempt. It has no production alias and was not deleted; cleanup requires explicit owner approval.
 
 ## Data-safety confirmation
