@@ -31,6 +31,8 @@ Status: **STAGING VALIDATED — PRODUCTION NOT DEPLOYED**
 - User-provided PDF evidence `D:\Download\laporan-motokraf-september-2026 (1).pdf` was read and rendered successfully: 1 A4 page, unencrypted, text extraction succeeded, and visual review found no clipping or overlap. Values matched the demo report: income Rp470.000, expense Rp200.000, margin Rp270.000, 2 CLOSED, and 1 active Job.
 - User-provided Excel evidence `D:\Download\laporan-motokraf-september-2026.xls` was parsed successfully as SpreadsheetML: worksheet `Laporan`, September 2026, 3 transactions, 2 CLOSED, 1 active Job, Payment total Rp470.000, CLOSED deal total Rp470.000, and duplicate Job ID 0. Summary values match the PDF.
 - Exact automated mobile check passed on the approved local demo and Owner report: viewport `390x844`, document scroll width `390`, body scroll width `390`, and `horizontalOverflow=false`.
+- Authenticated preview browser validation passed at viewport `390x844`: Owner opened a CLOSED synthetic Job detail showing Payment and `Edit Riwayat Owner`; Operator mode showed the operational Job flow and did not show the Owner edit form. Both modes reported document/body scroll width `390` and `horizontalOverflow=false`.
+- Browser screenshots: `docs/staging-owner-detail-390x844.png` and `docs/staging-operator-390x844.png`.
 - Staging auth foundation: an `AuthUsers` tab was created additively in the isolated staging Sheet with headers `user_id`, `display_name`, `role`, `pin_hash`, `active`, `created_at`, and `updated_at`. It contains two synthetic users only (`owner-demo` and `operator-demo`), with SHA-256 hashes and no plain PIN values. The staging Apps Script deployment was updated to version 10; no operational tab was changed.
 
 ## Backup evidence
@@ -114,6 +116,7 @@ Synthetic records were created only in the isolated staging Sheet and are clearl
 - Owner history edit smoke: Preview deployment `https://aplikasi-bengkel-staging-20260912-c5bnb8n4r-dfhstores-projects.vercel.app`, deployment `dpl_nkz7AAuq8EpoaGHwK77akqUYaqFs`; Owner edit of synthetic `JOB-20260912-0001` returned success with an audit ID, staging `AuditLog` reached 2 rows, and Operator edit returned failure with `AUTH_ROLE_FORBIDDEN`.
 - Actor identity smoke: Apps Script version 21 direct POSTs returned `owner-demo (OWNER)` for Job, Payment, and Expense writes; an Operator Expense write returned `operator-demo (OPERATOR)`. No production endpoint was called.
 - Authenticated preview matrix: unauthenticated `/api/dashboard` returned `401`; Owner login returned `200`; authenticated `/api/auth/session`, `/api/dashboard`, `/api/history`, `/api/expenses`, `/api/recap`, and `/api/auth/users` returned `200` with successful payloads. Staging readback contained 2 CLOSED history Jobs and 3 synthetic Expenses. Logout returned `200`, followed by `/api/dashboard` returning `401`.
+- Authenticated UI smoke: preview login loaded the dynamic user dropdown; Owner mode rendered `Beranda Owner`, dashboard/recap, Job start form, CLOSED history, Expense form, and Owner edit detail; Operator mode rendered `MOTOKRAF · OPERATOR` and the Job start flow while hiding Owner-only history/expense editing areas.
 - Production smoke test: not run as a mutating test; live production remains unchanged.
 
 ## Rollback procedure
