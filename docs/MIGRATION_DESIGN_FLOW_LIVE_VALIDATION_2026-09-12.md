@@ -29,6 +29,19 @@ Status: **STAGING VALIDATED — PRODUCTION NOT DEPLOYED**
 - Expected tabs read back: `Jobs`, `Payments`, `Expenses`, `Media`.
 - Backup is available for rollback comparison; no production pre/post migration write occurred.
 
+## Production integrity comparison — read-only
+
+- Audit source: live production routes through `https://aplikasi-bengkel-sprint0.vercel.app` and the timestamped backup above.
+- Jobs: 28 backup rows vs 28 live rows; ID set identical; duplicate IDs 0; business-content comparison passed.
+- Payments: 28 backup rows vs 28 live rows reconstructed from every Job detail; ID set identical; duplicate IDs 0; business-content comparison passed.
+- Expenses: 14 backup rows vs 14 live rows; ID set identical; duplicate IDs 0; business-content comparison passed.
+- Media: 0 backup rows vs 0 live linked rows across every Job detail; duplicate IDs 0; business-content comparison passed.
+- All 28 history Jobs had readable detail; Payment→Job mismatches 0; Media→Job mismatches 0.
+- Dashboard: active jobs 0, income month 3,730,000, expense month 3,055,000, inconsistencies 0.
+- Recap for 2026-09-01 through 2026-09-12: income 3,730,000, expense 3,055,000, difference 675,000, CLOSED count 28, inconsistencies 0.
+- Numeric formatting differences between XLSX and JSON were normalized semantically; no business-content difference remained.
+- Audit runner: `tools/production_integrity_audit_20260912.py`.
+
 ## Files and components changed
 
 - `frontend/app/page.tsx`
@@ -57,9 +70,9 @@ Synthetic records were created only in the isolated staging Sheet and are clearl
 | New design appears at live production URL | NOT EXERCISED | Production deployment intentionally unchanged; preview is the validation target. |
 | Owner and Operator latest flows usable | PASS WITH LIMITATION | Local source and protected Vercel preview render the new flow; secure production auth/mode contract remains unverified. |
 | Login and mode switching | NOT EXERCISED | Current implementation documents mode switching as display-only; production authorization must be reviewed separately. |
-| Existing operational data readable without change | NOT PROVEN | Production was not queried for a full integrity comparison during this migration. |
-| No data loss or duplicate operational IDs | PASS WITH LIMITATION | Isolated synthetic staging workflow passed; production-wide duplicate scan remains pending. |
-| Dashboard/report consistency | PASS WITH LIMITATION | Staging synthetic totals reconcile exactly; production comparison remains pending. |
+| Existing operational data readable without change | PASS WITH LIMITATION | Read-only live-versus-backup business-content comparison passed; this is a point-in-time baseline, not a post-production-migration comparison. |
+| No data loss or duplicate operational IDs | PASS WITH LIMITATION | Jobs, Payments, Expenses, and Media ID sets match backup with zero duplicates; no migration write has occurred yet. |
+| Dashboard/report consistency | PASS | Live Dashboard and Recap totals are internally consistent and report zero inconsistencies. |
 | PDF and Excel download | NOT EXERCISED | UI/source path exists, but preview download acceptance still needs a browser file-download check. |
 | Motokraf logo correct | PASS | Official checkpoint asset is present in the frontend. |
 | Mobile 390x844 without horizontal overflow | PASS WITH LIMITATION | Approved local 390x844 visual and responsive CSS; preview browser viewport evidence remains pending. |
@@ -82,7 +95,7 @@ Synthetic records were created only in the isolated staging Sheet and are clearl
 
 ## Unresolved risks
 
-- Production data integrity pre/post comparison is not yet proven.
+- A post-migration comparison cannot exist until a future production deployment is explicitly approved; the current pre-deployment live-versus-backup baseline is complete.
 - Production authentication/authorization and Owner edit-history authorization contract are not yet approved for migration.
 - Preview browser validation for PDF/Excel download and exact 390x844 viewport is still pending.
 - An isolated Vercel project named `repo-checkout` was accidentally created by an earlier root-level deploy attempt. It has no production alias and was not deleted; cleanup requires explicit owner approval.
@@ -93,4 +106,4 @@ No operational data was changed or deleted by this validation. The only writes a
 
 ## Decision
 
-**Do not deploy production yet.** The staging Apps Script + Vercel preview integration and synthetic Job/Payment/Expense reconciliation pass. Production migration remains gated on production read-only integrity evidence, approved authentication/authorization behavior, and browser-level preview acceptance for downloads and mobile viewport.
+**Do not deploy production yet.** The production read-only integrity baseline now passes against the timestamped backup, and the staging Apps Script + Vercel preview integration plus synthetic Job/Payment/Expense reconciliation pass. Production migration remains gated on approved authentication/authorization behavior and browser-level preview acceptance for downloads and mobile viewport.
