@@ -86,12 +86,12 @@ Scope: Initial read-only audit for migrating the latest Basil UI / Motokraf desi
 
 ## Unresolved blockers
 
-1. Isolated Vercel staging is now established and READY. A new blank Google Sheet `STAGING_MVP_DATA_STORE_2026-09-12` was created for synthetic testing; Apps Script binding, tabs/schema, and isolated Drive media path are still not established.
+1. Isolated Vercel staging is established and READY. A new blank Google Sheet `STAGING_MVP_DATA_STORE_2026-09-12` is provisioned with the four required header-only tabs (`Jobs`, `Payments`, `Expenses`, `Media`). A separate Apps Script project `Aplikasi Bengkel Jok - API Staging 2026-09-12` is provisioned from sanitized source, and its script properties point only to the staging Sheet and staging Drive media folders.
 2. The local browser validation uses an unconfigured API boundary, so no production or real operational write was attempted.
 3. Authentication/authorization and Owner/Operator mode switching require explicit production-scope verification; current source labels mode switching as display-only.
 4. Owner edit-history cannot be enabled safely until a reviewed backend endpoint, authorization rule, audit behavior, and non-destructive test path are provided.
-5. Vercel staging is isolated and has no environment variables; backend staging still needs to be provisioned before synthetic workflow testing.
-6. Apps Script staging provisioning is blocked: `clasp create` returned `Project file already exists` in fresh local folders with unique staging titles and did not produce a local project file. No live Apps Script project was changed.
+5. Vercel staging is isolated and has no environment variables; it remains intentionally disconnected until the Apps Script staging Web App deployment URL and access policy are reviewed.
+6. Apps Script staging source/configuration is provisioned. Web App deployment and access policy are not yet exercised because selecting public or broader access would be a permission change requiring an explicit decision. No live Apps Script project was changed.
 
 ## Data-safety confirmation
 
@@ -99,4 +99,4 @@ During this audit, no operational data was deleted, reset, moved, edited, or sup
 
 ## Decision
 
-**Do not deploy. Do not claim migration success.** Local design/flow implementation is now present and the frontend build plus 4 backend unit tests pass. Backup/export and Vercel rollback evidence are available. Resume only after staging separation, secure authentication/edit contract, and production-like read-only integrity comparison are resolved.
+**Do not deploy production. Do not claim migration success.** Local design/flow implementation is present, the frontend build plus 4 backend unit tests pass, backup/export and Vercel rollback evidence are available, and isolated Sheet/Drive/Apps Script staging is now provisioned. Resume only after the staging Web App access policy is explicitly selected, synthetic workflow evidence is collected, and production-like read-only integrity comparison is resolved.
