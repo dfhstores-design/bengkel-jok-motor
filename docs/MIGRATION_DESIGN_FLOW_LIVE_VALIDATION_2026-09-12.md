@@ -59,7 +59,7 @@ Status: **STAGING VALIDATED — PRODUCTION NOT DEPLOYED**
 - Apps Script source derives `created_by` and `updated_by` from the deployment Script Property `ACTOR_LABEL`, not from a verified request principal.
 - No unauthenticated write probe was attempted because it could create or mutate production data.
 - Result: **BLOCKED — AUTHORIZATION CONTRACT REQUIRED**. Do not enable production Owner edit-history or promote the new write-capable frontend until authentication, role checks, session expiry, audit identity, and server-side authorization are specified and tested in isolated staging.
-- Owner-approved contract is documented in `docs/AUTHORIZATION_CONTRACT_2026-09-12.md`: Owner session revocable without automatic expiry, Operator expiry after 2 hours idle, server-derived actor identity, and restricted Owner history edits with audit evidence.
+- Owner-approved personal-use contract is documented in `docs/AUTHORIZATION_CONTRACT_2026-09-12.md`: hashed PINs and roles in `AuthUsers`, login role dropdown, Owner-managed users, six-hour idle expiry for both roles, server-derived actor identity, and restricted Owner history edits with audit evidence.
 
 ## Files and components changed
 

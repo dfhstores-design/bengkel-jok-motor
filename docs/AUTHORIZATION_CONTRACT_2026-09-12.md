@@ -1,16 +1,21 @@
 # Motokraf Authentication and Authorization Contract
 
-Status: **APPROVED DESIGN — STAGING IMPLEMENTATION REQUIRED**
+Status: **APPROVED PERSONAL-USE DESIGN — STAGING IMPLEMENTATION REQUIRED**
+
+Scope: Personal workshop discipline and business insight. This is intentionally a small single-owner system, not a commercial multi-tenant product.
 
 ## Roles and session policy
 
 - Owner and Operator login screens follow the approved Motokraf demo.
 - The selected role is never trusted from browser state alone.
 - The server issues the session after validating the submitted role and PIN.
-- Owner sessions do not expire automatically, but remain revocable by the owner or administrator.
-- Operator sessions expire after 2 hours without an authenticated request or other recorded activity.
-- Logout revokes the session and clears the browser cookie.
-- PINs, signing keys, and session secrets are runtime-injected. They must not be committed, placed in frontend JavaScript, or sent in chat.
+- Owner and Operator sessions end on logout or after 6 hours without activity.
+- Logout clears the browser session.
+- No commercial tenant, billing, or enterprise identity system is required.
+- PIN hashes and roles are stored in an `AuthUsers` sheet. Plain PINs must never be stored.
+- The login role is selected from a dropdown populated from active `AuthUsers` rows.
+- The Owner may add or deactivate users from the UI; manual Sheet maintenance remains supported for recovery.
+- Signing keys and session secrets are runtime-injected. They must not be committed, placed in frontend JavaScript, or sent in chat.
 
 ## Request flow
 
@@ -43,8 +48,8 @@ Status: **APPROVED DESIGN — STAGING IMPLEMENTATION REQUIRED**
 - Valid Owner login succeeds and can read history.
 - Valid Operator login succeeds and can use Operator work flow.
 - Forged role or PIN fails without revealing which credential component was wrong.
-- Owner session remains valid beyond 2 hours until revoked.
-- Operator session is rejected after 2 hours of inactivity.
+- Owner and Operator sessions end after logout or 6 hours of inactivity.
+- Owner can add or deactivate a user; the role dropdown reflects active users.
 - Owner history edit changes only an allowed field and records audit evidence.
 - Operator history edit is rejected.
 - Attempts to change immutable IDs, status, payment, or relations are rejected.
