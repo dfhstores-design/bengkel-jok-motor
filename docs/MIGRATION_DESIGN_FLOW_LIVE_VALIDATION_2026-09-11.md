@@ -91,6 +91,7 @@ Scope: Initial read-only audit for migrating the latest Basil UI / Motokraf desi
 3. Authentication/authorization and Owner/Operator mode switching require explicit production-scope verification; current source labels mode switching as display-only.
 4. Owner edit-history cannot be enabled safely until a reviewed backend endpoint, authorization rule, audit behavior, and non-destructive test path are provided.
 5. Vercel staging is isolated and has no environment variables; backend staging still needs to be provisioned before synthetic workflow testing.
+6. Apps Script staging provisioning is blocked: `clasp create` returned `Project file already exists` in fresh local folders with unique staging titles and did not produce a local project file. No live Apps Script project was changed.
 
 ## Data-safety confirmation
 
