@@ -22,6 +22,13 @@ Status: **STAGING VALIDATED — PRODUCTION NOT DEPLOYED**
 - Preview environment variable: encrypted `APPS_SCRIPT_API_URL`, pointing only to the staging Apps Script URL.
 - Local build: `npm run build` passed from `frontend`.
 
+## Browser validation attempt
+
+- The approved local demo opened in Owner mode and displayed `Laporan Bulanan`, `Download PDF`, and `Download Excel`.
+- The browser adapter did not observe a download event because both actions create Blob URLs and trigger an in-page anchor click; this is an adapter limitation, so file creation is **NOT PROVEN**.
+- A separate headless browser run could not complete reliably in the current local runtime; no production or staging data was involved.
+- Existing approved 390x844 visual evidence remains valid for layout review, but a fresh automated exact-viewport run is still pending.
+
 ## Backup evidence
 
 - Backup: `D:\Documents\AI-GPT\Aplikasi Bengkel Jok Motor\backups\BACKUP_PRODUCTION_MVP_DATA_STORE_2026-09-11_2355.xlsx`
@@ -73,7 +80,7 @@ Synthetic records were created only in the isolated staging Sheet and are clearl
 | Existing operational data readable without change | PASS WITH LIMITATION | Read-only live-versus-backup business-content comparison passed; this is a point-in-time baseline, not a post-production-migration comparison. |
 | No data loss or duplicate operational IDs | PASS WITH LIMITATION | Jobs, Payments, Expenses, and Media ID sets match backup with zero duplicates; no migration write has occurred yet. |
 | Dashboard/report consistency | PASS | Live Dashboard and Recap totals are internally consistent and report zero inconsistencies. |
-| PDF and Excel download | NOT EXERCISED | UI/source path exists, but preview download acceptance still needs a browser file-download check. |
+| PDF and Excel download | NOT PROVEN | Both controls are visible in Owner report; Blob download event was not captured by the current browser adapter. |
 | Motokraf logo correct | PASS | Official checkpoint asset is present in the frontend. |
 | Mobile 390x844 without horizontal overflow | PASS WITH LIMITATION | Approved local 390x844 visual and responsive CSS; preview browser viewport evidence remains pending. |
 | Production version/commit identifiable | PASS WITH LIMITATION | Preview deployment ID is identified; production version remains unchanged. |
@@ -98,6 +105,7 @@ Synthetic records were created only in the isolated staging Sheet and are clearl
 - A post-migration comparison cannot exist until a future production deployment is explicitly approved; the current pre-deployment live-versus-backup baseline is complete.
 - Production authentication/authorization and Owner edit-history authorization contract are not yet approved for migration.
 - Preview browser validation for PDF/Excel download and exact 390x844 viewport is still pending.
+- The export and mobile checks are tooling-limited; no code or production resource was changed while attempting them.
 - An isolated Vercel project named `repo-checkout` was accidentally created by an earlier root-level deploy attempt. It has no production alias and was not deleted; cleanup requires explicit owner approval.
 
 ## Data-safety confirmation
