@@ -1,0 +1,12 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import vm from 'node:vm';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+const here = path.dirname(fileURLToPath(import.meta.url));
+const code = fs.readFileSync(path.resolve(here, '..', 'apps-script', 'Response.gs'), 'utf8');
+const sandbox = { ContentService: { createTextOutput: () => ({ setMimeType(){ return this; } }), MimeType: { JSON: 'json' } } };
+vm.createContext(sandbox); vm.runInContext(code, sandbox);
+test('success envelope is stable', () => assert.deepEqual(JSON.parse(JSON.stringify(sandbox.ok_({a:1}, 'ok'))), {success:true,data:{a:1},message:'ok'}));
+test('error envelope never leaks data', () => assert.deepEqual(JSON.parse(JSON.stringify(sandbox.fail_('bad'))), {success:false,data:null,message:'bad'}));
