@@ -1,6 +1,6 @@
 # Motokraf Authentication and Authorization Contract
 
-Status: **APPROVED PERSONAL-USE DESIGN — STAGING IMPLEMENTATION REQUIRED**
+Status: **APPROVED PERSONAL-USE DESIGN — STAGING BACKEND FOUNDATION IMPLEMENTED**
 
 Scope: Personal workshop discipline and business insight. This is intentionally a small single-owner system, not a commercial multi-tenant product.
 
@@ -54,6 +54,12 @@ Scope: Personal workshop discipline and business insight. This is intentionally 
 - Operator history edit is rejected.
 - Attempts to change immutable IDs, status, payment, or relations are rejected.
 - Production is not used for auth tests or synthetic records.
+
+## Current implementation boundary
+
+- Staging Apps Script now has additive `AuthUsers` support, SHA-256 PIN verification, UUID session references, six-hour idle expiry, logout invalidation, Owner-only user listing, and Owner-only user creation.
+- The staging-only smoke test passed for Owner login, Operator login, invalid PIN rejection, Owner-only authorization, logout invalidation, and no PIN exposure in returned data.
+- Existing operational actions are not yet globally gated by `requireAuth_`; the frontend login/session wiring and per-action authorization remain the next implementation package.
 
 ## Production gate
 

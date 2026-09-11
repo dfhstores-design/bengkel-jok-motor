@@ -194,6 +194,11 @@ function humanizeError_(error, cleanupAttempted, cleaned) {
   if (message === 'CONFIG_TIMEZONE_INVALID') return 'Timezone backend tidak sesuai konfigurasi Sprint 0.';
   if (message.indexOf('SHEET_NOT_FOUND:') === 0) return 'Struktur workbook belum sesuai konfigurasi.';
   if (message === 'INVALID_ENTITY_TYPE') return 'Tipe ID backend tidak valid.';
+  if (message === 'AUTH_USERS_SHEET_NOT_FOUND') return 'Sheet user belum tersedia.';
+  if (message === 'AUTH_SESSION_INVALID') return 'Sesi login berakhir. Silakan login kembali.';
+  if (message === 'AUTH_ROLE_FORBIDDEN') return 'Akses tidak tersedia untuk role ini.';
+  if (message === 'AUTH_CREDENTIALS_REQUIRED') return 'User dan PIN wajib diisi.';
+  if (message === 'AUTH_INVALID_CREDENTIALS') return 'User atau PIN tidak valid.';
   if (message === 'HEALTHCHECK_CLEANUP_FAILED') return 'Health check gagal membersihkan data uji. Periksa backend log.';
   if (cleanupAttempted && !cleaned) return 'Health check gagal dan cleanup data uji perlu diperiksa oleh admin.';
   return 'Health check gagal. Periksa konfigurasi dan log backend.';
@@ -207,6 +212,10 @@ function doPost(e) {
 function handleRequest_(e) {
   const action = e && e.parameter ? e.parameter.action : null;
   try {
+    if (action === 'login') return jsonOutput_(login_(e));
+    if (action === 'logout') return jsonOutput_(logout_(e));
+    if (action === 'listAuthUsers') return jsonOutput_(listAuthUsers_(e));
+    if (action === 'createAuthUser') return jsonOutput_(createAuthUser_(e));
     if (action === 'healthCheck') return jsonOutput_(healthCheck_());
 
     if (action === 'createJob') return jsonOutput_(createJob_(e));
@@ -225,6 +234,8 @@ function handleRequest_(e) {
     return jsonOutput_(fail_('Action tidak dikenali.'));
   } catch (error) {
     logEvent_(action || 'unknown', null, 'ERROR', String(error && error.message ? error.message : error));
+    var errorMessage = String(error && error.message ? error.message : error);
+    if (errorMessage.indexOf('AUTH_') === 0) return jsonOutput_(fail_(humanizeError_(error)));
     return jsonOutput_(fail_('Terjadi kesalahan pada backend.'));
   }
 }

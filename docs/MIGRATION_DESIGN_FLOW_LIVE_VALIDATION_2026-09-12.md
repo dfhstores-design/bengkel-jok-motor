@@ -13,7 +13,7 @@ Status: **STAGING VALIDATED — PRODUCTION NOT DEPLOYED**
 - Apps Script staging deployment URL: `https://script.google.com/macros/s/AKfycbztGm1dnZt1FF42V0DD2B-T4BEYQ06aATxeUBhcNHhlehl1Pp8eOTATHMVxp-PQ0XHvsw/exec`
 - Access policy: Anyone, execute as owner, based on the supplied deployment evidence.
 - Apps Script staging project: `Aplikasi Bengkel Jok - API Staging 2026-09-12`.
-- Apps Script staging version: version 5, description `Staging synthetic validation 2026-09-12 schema fix`.
+- Apps Script staging version: version 10, description `Auth staging smoke evidence 2026-09-12`.
 - Read-only endpoint checks: `listActiveJobs`, `listClosedJobs`, `getDashboard`, and `getRecap` returned successful JSON against the empty staging datastore.
 - Vercel staging project: `aplikasi-bengkel-staging-20260912`.
 - Vercel preview deployment: `https://aplikasi-bengkel-staging-20260912-4vgwr9cll-dfhstores-projects.vercel.app`
@@ -31,7 +31,7 @@ Status: **STAGING VALIDATED — PRODUCTION NOT DEPLOYED**
 - User-provided PDF evidence `D:\Download\laporan-motokraf-september-2026 (1).pdf` was read and rendered successfully: 1 A4 page, unencrypted, text extraction succeeded, and visual review found no clipping or overlap. Values matched the demo report: income Rp470.000, expense Rp200.000, margin Rp270.000, 2 CLOSED, and 1 active Job.
 - User-provided Excel evidence `D:\Download\laporan-motokraf-september-2026.xls` was parsed successfully as SpreadsheetML: worksheet `Laporan`, September 2026, 3 transactions, 2 CLOSED, 1 active Job, Payment total Rp470.000, CLOSED deal total Rp470.000, and duplicate Job ID 0. Summary values match the PDF.
 - Exact automated mobile check passed on the approved local demo and Owner report: viewport `390x844`, document scroll width `390`, body scroll width `390`, and `horizontalOverflow=false`.
-- Staging auth foundation: an `AuthUsers` tab was created additively in the isolated staging Sheet with headers `user_id`, `display_name`, `role`, `pin_hash`, `active`, `created_at`, and `updated_at`; it contains zero user rows and zero PINs. The staging Apps Script setup completed as deployment version 6.
+- Staging auth foundation: an `AuthUsers` tab was created additively in the isolated staging Sheet with headers `user_id`, `display_name`, `role`, `pin_hash`, `active`, `created_at`, and `updated_at`. It contains two synthetic users only (`owner-demo` and `operator-demo`), with SHA-256 hashes and no plain PIN values. The staging Apps Script deployment was updated to version 10; no operational tab was changed.
 
 ## Backup evidence
 
@@ -61,13 +61,15 @@ Status: **STAGING VALIDATED — PRODUCTION NOT DEPLOYED**
 - No unauthenticated write probe was attempted because it could create or mutate production data.
 - Result: **BLOCKED — AUTHORIZATION CONTRACT REQUIRED**. Do not enable production Owner edit-history or promote the new write-capable frontend until authentication, role checks, session expiry, audit identity, and server-side authorization are specified and tested in isolated staging.
 - Owner-approved personal-use contract is documented in `docs/AUTHORIZATION_CONTRACT_2026-09-12.md`: hashed PINs and roles in `AuthUsers`, login role dropdown, Owner-managed users, six-hour idle expiry for both roles, server-derived actor identity, and restricted Owner history edits with audit evidence.
-- Auth implementation is not yet enabled. The `AuthUsers` tab is intentionally header-only until the staging login and hash verification code is ready.
+- Auth backend foundation is implemented in the isolated staging project and is not enabled in production. The staging-only smoke test passed for login, role denial, invalid PIN rejection, logout invalidation, and PIN non-exposure. Full business-action gating and frontend session wiring remain open.
 
 ## Files and components changed
 
 - `frontend/app/page.tsx`
 - `frontend/app/globals.css`
 - `frontend/public/motokraf-site-ico.webp`
+- `apps-script/Auth.gs`
+- `apps-script/Code.gs`
 - Documentation and validation reports.
 - No production API route, Apps Script production source, Sheet header, operational row, or Drive media was changed.
 
@@ -90,7 +92,7 @@ Synthetic records were created only in the isolated staging Sheet and are clearl
 |---|---|---|
 | New design appears at live production URL | NOT EXERCISED | Production deployment intentionally unchanged; preview is the validation target. |
 | Owner and Operator latest flows usable | PASS WITH LIMITATION | Local source and protected Vercel preview render the new flow; secure production auth/mode contract remains unverified. |
-| Login and mode switching | BLOCKED — CONTRACT APPROVED | Policy is approved and documented, but secure runtime injection and staging implementation/tests are still required. |
+| Login and mode switching | PASS WITH LIMITATION | Staging backend auth smoke test passed; frontend login/session wiring and production authorization are not enabled. |
 | Existing operational data readable without change | PASS WITH LIMITATION | Read-only live-versus-backup business-content comparison passed; this is a point-in-time baseline, not a post-production-migration comparison. |
 | No data loss or duplicate operational IDs | PASS WITH LIMITATION | Jobs, Payments, Expenses, and Media ID sets match backup with zero duplicates; no migration write has occurred yet. |
 | Dashboard/report consistency | PASS | Live Dashboard and Recap totals are internally consistent and report zero inconsistencies. |
@@ -105,7 +107,7 @@ Synthetic records were created only in the isolated staging Sheet and are clearl
 
 - Preview page: `HTTP 200` when accessed through Vercel deployment tooling.
 - Preview `/api/dashboard`, `/api/history`, and `/api/recap`: successful JSON responses through the official deployment protection bypass path.
-- GAS staging public endpoint: successful JSON read-only responses for the tested actions.
+- GAS staging public endpoint: access policy was changed in the staging deployment UI; anonymous terminal verification is **NOT PROVEN** because the request was redirected by Google. Internal staging auth smoke test completed successfully in Apps Script execution logs at 02:16:29.
 - Production smoke test: not run as a mutating test; live production remains unchanged.
 
 ## Rollback procedure
@@ -118,7 +120,8 @@ Synthetic records were created only in the isolated staging Sheet and are clearl
 ## Unresolved risks
 
 - A post-migration comparison cannot exist until a future production deployment is explicitly approved; the current pre-deployment live-versus-backup baseline is complete.
-- Production authentication/authorization and Owner edit-history authorization contract are not yet approved for migration.
+- Production authentication/authorization and Owner edit-history authorization are not implemented or approved for migration.
+- Staging Web App anonymous accessibility is unresolved; the deployment UI currently requires a separate verification from an external browser/session.
 - The production endpoint is publicly readable without a verified user session. A server-side authorization design and staging-only test plan are required before any write-capable production release.
 - PDF, Excel, and exact automated 390x844 viewport validation are complete.
 - No code or production resource was changed while performing the export and mobile checks.
@@ -130,4 +133,4 @@ No operational data was changed or deleted by this validation. The only writes a
 
 ## Decision
 
-**Do not deploy production yet.** The production read-only integrity baseline, PDF/Excel evidence, mobile viewport check, and staging integration pass. Production migration is blocked by the missing server-side authentication/authorization contract; Owner edit-history must remain disabled until that gate is closed.
+**Do not deploy production yet.** The production read-only integrity baseline, PDF/Excel evidence, mobile viewport check, and staging auth foundation pass. Production migration remains blocked until frontend session wiring, global business-action authorization, audit evidence, Owner edit-history implementation, and rollback-ready staging verification are complete.
