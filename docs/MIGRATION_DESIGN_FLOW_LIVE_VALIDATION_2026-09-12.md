@@ -13,7 +13,7 @@ Status: **STAGING VALIDATED — PRODUCTION NOT DEPLOYED**
 - Apps Script staging deployment URL: `https://script.google.com/macros/s/AKfycbztGm1dnZt1FF42V0DD2B-T4BEYQ06aATxeUBhcNHhlehl1Pp8eOTATHMVxp-PQ0XHvsw/exec`
 - Access policy: Anyone, execute as owner, based on the supplied deployment evidence.
 - Apps Script staging project: `Aplikasi Bengkel Jok - API Staging 2026-09-12`.
-- Apps Script staging version: version 13, description `Auth public staging 2026-09-12` (new isolated deployment candidate).
+- Apps Script staging version: version 14, description `Auth anonymous staging 2026-09-12`; anonymous access verified from the Vercel runtime.
 - Read-only endpoint checks: `listActiveJobs`, `listClosedJobs`, `getDashboard`, and `getRecap` returned successful JSON against the empty staging datastore.
 - Vercel staging project: `aplikasi-bengkel-staging-20260912`.
 - Vercel preview deployment: `https://aplikasi-bengkel-staging-20260912-4vgwr9cll-dfhstores-projects.vercel.app`
@@ -92,7 +92,7 @@ Synthetic records were created only in the isolated staging Sheet and are clearl
 |---|---|---|
 | New design appears at live production URL | NOT EXERCISED | Production deployment intentionally unchanged; preview is the validation target. |
 | Owner and Operator latest flows usable | PASS WITH LIMITATION | Local source and protected Vercel preview render the new flow; secure production auth/mode contract remains unverified. |
-| Login and mode switching | PASS WITH LIMITATION | Staging backend auth smoke test passed and frontend login/session wiring builds successfully; production authorization is not enabled. |
+| Login and mode switching | PASS WITH LIMITATION | Preview end-to-end test passed: active users loaded, Owner login/session succeeded, Dashboard succeeded after login, logout succeeded, and post-logout Dashboard returned 401. Production authorization is not enabled. |
 | Existing operational data readable without change | PASS WITH LIMITATION | Read-only live-versus-backup business-content comparison passed; this is a point-in-time baseline, not a post-production-migration comparison. |
 | No data loss or duplicate operational IDs | PASS WITH LIMITATION | Jobs, Payments, Expenses, and Media ID sets match backup with zero duplicates; no migration write has occurred yet. |
 | Dashboard/report consistency | PASS | Live Dashboard and Recap totals are internally consistent and report zero inconsistencies. |
@@ -107,7 +107,8 @@ Synthetic records were created only in the isolated staging Sheet and are clearl
 
 - Preview page: `HTTP 200` when accessed through Vercel deployment tooling.
 - Preview `/api/dashboard`, `/api/history`, and `/api/recap`: successful JSON responses through the official deployment protection bypass path.
-- GAS staging public endpoint: access policy was changed in the staging deployment UI; anonymous terminal verification is **NOT PROVEN** because the request was redirected by Google. Internal staging auth smoke test completed successfully in Apps Script execution logs at 02:16:29.
+- GAS staging public endpoint: deployment `AKfycbxZbHhW7c_QaRGcPna5Usj5RCNhztwDDGohJiChsNRcyBJ8oMbCj3ra6C-DN3QJ8ipMHg` returned two synthetic users anonymously from the Vercel runtime.
+- Vercel Preview authenticated smoke: `https://aplikasi-bengkel-staging-20260912-ejorggenp-dfhstores-projects.vercel.app`, deployment `dpl_Dkkva1xp7Rmu8AzrpjQKDkjFspjw`, status Ready. `/api/auth/users` returned 2 users; unauthenticated Dashboard returned 401; Owner login and session returned success; Dashboard after login returned success; logout returned success; Dashboard after logout returned 401.
 - Production smoke test: not run as a mutating test; live production remains unchanged.
 
 ## Rollback procedure
@@ -121,7 +122,7 @@ Synthetic records were created only in the isolated staging Sheet and are clearl
 
 - A post-migration comparison cannot exist until a future production deployment is explicitly approved; the current pre-deployment live-versus-backup baseline is complete.
 - Production authentication/authorization and Owner edit-history authorization are not implemented or approved for migration.
-- Staging Web App anonymous accessibility remains unresolved. New deployment candidate `AKfycbzFPjFhYxH3m5dVYs2BVBPOxL-ZUYAtuqE1BW3fyfmmsT681lLrnuZBFJJAiM674LKorg` also returned HTTP 302 to Google Sign-In for `listLoginUsers`; it was not wired into Vercel Preview. This must be resolved before end-to-end browser login can be marked PASS.
+- Staging Web App anonymous accessibility is resolved for the new `ANYONE_ANONYMOUS` deployment; the prior Google-account-only candidates remain unused.
 - The production endpoint is publicly readable without a verified user session. A server-side authorization design and staging-only test plan are required before any write-capable production release.
 - PDF, Excel, and exact automated 390x844 viewport validation are complete.
 - No code or production resource was changed while performing the export and mobile checks.
@@ -133,4 +134,4 @@ No operational data was changed or deleted by this validation. The only writes a
 
 ## Decision
 
-**Do not deploy production yet.** The production read-only integrity baseline, PDF/Excel evidence, mobile viewport check, and staging auth foundation pass. Production migration remains blocked by unresolved staging Web App access, missing audit/edit-history implementation, and incomplete end-to-end authenticated browser evidence. Required control decision: enable an Apps Script Web App deployment demonstrably callable by the Vercel runtime without Google account cookies, or approve a different secure backend runtime; do not add credentials or bypass this control in source code.
+**Do not deploy production yet.** The production read-only integrity baseline, PDF/Excel evidence, mobile viewport check, and staging authenticated smoke pass. Production migration remains blocked by missing audit/edit-history implementation and incomplete authenticated browser evidence for all business flows.
