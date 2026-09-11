@@ -77,6 +77,47 @@ function createAuthUser_(e) {
   return ok_({ user_id: userId, display_name: displayName, role: role, active: true }, 'User berhasil ditambahkan.');
 }
 
+function auditLogSheet_() {
+  var sheet = getSpreadsheet_().getSheetByName('AuditLog');
+  if (!sheet) throw new Error('AUDIT_LOG_SHEET_NOT_FOUND');
+  return sheet;
+}
+
+function auditLog_(action, entityId, session, changedFields, before, after) {
+  var now = nowIso_(), auditId = generateEntityId_('AUDIT');
+  auditLogSheet_().appendRow([auditId, now, action, 'JOB', entityId, session.user_id, session.role, changedFields.join(','), JSON.stringify(before), JSON.stringify(after)]);
+  return auditId;
+}
+
+function editClosedJob_(e) {
+  var lock = LockService.getScriptLock(); lock.waitLock(15000);
+  try {
+    var body = parseBody_(e), key = requestKey_(body), prior = idempotentResult_('editClosedJob', key);
+    if (!key) return fail_('EDIT_IDEMPOTENCY_REQUIRED');
+    if (prior) return prior;
+    var session = requireAuth_(e, body, 'OWNER'), jobId = text_(body.job_id);
+    if (!jobId) return fail_('JOB_ID_REQUIRED');
+    var allowed = ['customer_name', 'customer_whatsapp', 'work_description', 'notes'];
+    var supplied = Object.keys(body).filter(function(name) { return ['job_id', 'idempotency_key', 'session_token'].indexOf(name) < 0; });
+    if (supplied.some(function(name) { return allowed.indexOf(name) < 0; })) return fail_('EDIT_IMMUTABLE_FIELD');
+    var sheet = getSheet_(APP.SHEETS.JOBS), headers = headers_(sheet), last = sheet.getLastRow(), rowNumber = 0, before = null;
+    for (var row = 2; row <= last; row += 1) { var candidate = recordFromRow_(headers, sheet.getRange(row, 1, 1, headers.length).getValues()[0]); if (String(candidate.job_id) === jobId) { rowNumber = row; before = candidate; break; } }
+    if (!before) return fail_('JOB_NOT_FOUND');
+    if (String(before.status) !== 'CLOSED') return fail_('EDIT_CLOSED_ONLY');
+    var after = {}; Object.keys(before).forEach(function(name) { after[name] = before[name]; });
+    var changed = []; allowed.forEach(function(name) { if (Object.prototype.hasOwnProperty.call(body, name) && String(body[name] == null ? '' : body[name]) !== String(before[name] == null ? '' : before[name])) { after[name] = text_(body[name]); changed.push(name); } });
+    if (!changed.length) return fail_('EDIT_NO_CHANGES');
+    var now = nowIso_(); after.updated_at = now; after.updated_by = session.user_id + ' (' + session.role + ')';
+    headers.forEach(function(name, col) { if (changed.indexOf(name) >= 0 || name === 'updated_at' || name === 'updated_by') sheet.getRange(rowNumber, col + 1).setValue(after[name] == null ? '' : after[name]); });
+    var auditId = auditLog_('editClosedJob', jobId, session, changed, before, after);
+    var result = ok_({ job: after, audit_id: auditId }, 'Riwayat Job berhasil diperbarui.'); saveIdempotentResult_('editClosedJob', key, result); return result;
+  } catch (error) {
+    var message = String(error && error.message ? error.message : error);
+    var messages = { EDIT_IDEMPOTENCY_REQUIRED: 'Kunci idempotensi wajib diisi.', EDIT_IMMUTABLE_FIELD: 'Field ini tidak boleh diubah.', EDIT_CLOSED_ONLY: 'Hanya Job CLOSED yang dapat diedit.', EDIT_NO_CHANGES: 'Tidak ada perubahan yang disimpan.', AUDIT_LOG_SHEET_NOT_FOUND: 'AuditLog belum tersedia.' };
+    return fail_(messages[message] || 'Riwayat Job gagal diperbarui.');
+  } finally { lock.releaseLock(); }
+}
+
 function seedStagingAuthUsers() {
   if (getConfig_().environment !== 'staging') throw new Error('STAGING_ONLY');
   var sheet = authUsersSheet_(); if (sheet.getLastRow() > 1) return { success: true, seeded: false, dataRows: sheet.getLastRow() - 1 };
