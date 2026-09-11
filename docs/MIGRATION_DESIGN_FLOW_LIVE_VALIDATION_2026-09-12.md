@@ -52,6 +52,14 @@ Status: **STAGING VALIDATED — PRODUCTION NOT DEPLOYED**
 - Numeric formatting differences between XLSX and JSON were normalized semantically; no business-content difference remained.
 - Audit runner: `tools/production_integrity_audit_20260912.py`.
 
+## Authentication and authorization gate
+
+- Production Apps Script endpoint accepted a direct unauthenticated read-only `getDashboard` request and returned operational summary data.
+- Frontend mode switching is client-side state only. It does not establish identity, session, or role authorization.
+- Apps Script source derives `created_by` and `updated_by` from the deployment Script Property `ACTOR_LABEL`, not from a verified request principal.
+- No unauthenticated write probe was attempted because it could create or mutate production data.
+- Result: **BLOCKED — AUTHORIZATION CONTRACT REQUIRED**. Do not enable production Owner edit-history or promote the new write-capable frontend until authentication, role checks, session expiry, audit identity, and server-side authorization are specified and tested in isolated staging.
+
 ## Files and components changed
 
 - `frontend/app/page.tsx`
@@ -79,7 +87,7 @@ Synthetic records were created only in the isolated staging Sheet and are clearl
 |---|---|---|
 | New design appears at live production URL | NOT EXERCISED | Production deployment intentionally unchanged; preview is the validation target. |
 | Owner and Operator latest flows usable | PASS WITH LIMITATION | Local source and protected Vercel preview render the new flow; secure production auth/mode contract remains unverified. |
-| Login and mode switching | NOT EXERCISED | Current implementation documents mode switching as display-only; production authorization must be reviewed separately. |
+| Login and mode switching | FAIL / BLOCKED | Direct production read is reachable without a session; client-side mode buttons are not authorization. |
 | Existing operational data readable without change | PASS WITH LIMITATION | Read-only live-versus-backup business-content comparison passed; this is a point-in-time baseline, not a post-production-migration comparison. |
 | No data loss or duplicate operational IDs | PASS WITH LIMITATION | Jobs, Payments, Expenses, and Media ID sets match backup with zero duplicates; no migration write has occurred yet. |
 | Dashboard/report consistency | PASS | Live Dashboard and Recap totals are internally consistent and report zero inconsistencies. |
@@ -108,6 +116,7 @@ Synthetic records were created only in the isolated staging Sheet and are clearl
 
 - A post-migration comparison cannot exist until a future production deployment is explicitly approved; the current pre-deployment live-versus-backup baseline is complete.
 - Production authentication/authorization and Owner edit-history authorization contract are not yet approved for migration.
+- The production endpoint is publicly readable without a verified user session. A server-side authorization design and staging-only test plan are required before any write-capable production release.
 - PDF, Excel, and exact automated 390x844 viewport validation are complete.
 - No code or production resource was changed while performing the export and mobile checks.
 - An isolated Vercel project named `repo-checkout` was accidentally created by an earlier root-level deploy attempt. It has no production alias and was not deleted; cleanup requires explicit owner approval.
@@ -118,4 +127,4 @@ No operational data was changed or deleted by this validation. The only writes a
 
 ## Decision
 
-**Do not deploy production yet.** The production read-only integrity baseline now passes against the timestamped backup, and the staging Apps Script + Vercel preview integration plus synthetic Job/Payment/Expense reconciliation pass. Production migration remains gated on approved authentication/authorization behavior and browser-level preview acceptance for downloads and mobile viewport.
+**Do not deploy production yet.** The production read-only integrity baseline, PDF/Excel evidence, mobile viewport check, and staging integration pass. Production migration is blocked by the missing server-side authentication/authorization contract; Owner edit-history must remain disabled until that gate is closed.
