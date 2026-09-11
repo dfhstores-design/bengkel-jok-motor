@@ -28,6 +28,7 @@ Status: **STAGING VALIDATED — PRODUCTION NOT DEPLOYED**
 - The browser adapter did not observe a download event because both actions create Blob URLs and trigger an in-page anchor click; this is an adapter limitation, so file creation is **NOT PROVEN**.
 - A separate headless browser run could not complete reliably in the current local runtime; no production or staging data was involved.
 - Existing approved 390x844 visual evidence remains valid for layout review, but a fresh automated exact-viewport run is still pending.
+- User-provided PDF evidence `D:\Download\laporan-motokraf-september-2026 (1).pdf` was read and rendered successfully: 1 A4 page, unencrypted, text extraction succeeded, and visual review found no clipping or overlap. Values matched the demo report: income Rp470.000, expense Rp200.000, margin Rp270.000, 2 CLOSED, and 1 active Job.
 
 ## Backup evidence
 
@@ -80,7 +81,8 @@ Synthetic records were created only in the isolated staging Sheet and are clearl
 | Existing operational data readable without change | PASS WITH LIMITATION | Read-only live-versus-backup business-content comparison passed; this is a point-in-time baseline, not a post-production-migration comparison. |
 | No data loss or duplicate operational IDs | PASS WITH LIMITATION | Jobs, Payments, Expenses, and Media ID sets match backup with zero duplicates; no migration write has occurred yet. |
 | Dashboard/report consistency | PASS | Live Dashboard and Recap totals are internally consistent and report zero inconsistencies. |
-| PDF and Excel download | NOT PROVEN | Both controls are visible in Owner report; Blob download event was not captured by the current browser adapter. |
+| PDF download | PASS | User-provided downloaded PDF is readable and visually valid; report values match the demo. |
+| Excel download | NOT PROVEN | Control is visible, but no downloaded Excel file has been provided for file-level validation. |
 | Motokraf logo correct | PASS | Official checkpoint asset is present in the frontend. |
 | Mobile 390x844 without horizontal overflow | PASS WITH LIMITATION | Approved local 390x844 visual and responsive CSS; preview browser viewport evidence remains pending. |
 | Production version/commit identifiable | PASS WITH LIMITATION | Preview deployment ID is identified; production version remains unchanged. |
@@ -104,7 +106,7 @@ Synthetic records were created only in the isolated staging Sheet and are clearl
 
 - A post-migration comparison cannot exist until a future production deployment is explicitly approved; the current pre-deployment live-versus-backup baseline is complete.
 - Production authentication/authorization and Owner edit-history authorization contract are not yet approved for migration.
-- Preview browser validation for PDF/Excel download and exact 390x844 viewport is still pending.
+- Excel file-level validation and exact automated 390x844 viewport validation are still pending; PDF file-level validation is now complete.
 - The export and mobile checks are tooling-limited; no code or production resource was changed while attempting them.
 - An isolated Vercel project named `repo-checkout` was accidentally created by an earlier root-level deploy attempt. It has no production alias and was not deleted; cleanup requires explicit owner approval.
 
