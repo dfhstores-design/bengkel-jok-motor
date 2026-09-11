@@ -59,6 +59,7 @@ Status: **STAGING VALIDATED — PRODUCTION NOT DEPLOYED**
 - Apps Script source derives `created_by` and `updated_by` from the deployment Script Property `ACTOR_LABEL`, not from a verified request principal.
 - No unauthenticated write probe was attempted because it could create or mutate production data.
 - Result: **BLOCKED — AUTHORIZATION CONTRACT REQUIRED**. Do not enable production Owner edit-history or promote the new write-capable frontend until authentication, role checks, session expiry, audit identity, and server-side authorization are specified and tested in isolated staging.
+- Owner-approved contract is documented in `docs/AUTHORIZATION_CONTRACT_2026-09-12.md`: Owner session revocable without automatic expiry, Operator expiry after 2 hours idle, server-derived actor identity, and restricted Owner history edits with audit evidence.
 
 ## Files and components changed
 
@@ -87,7 +88,7 @@ Synthetic records were created only in the isolated staging Sheet and are clearl
 |---|---|---|
 | New design appears at live production URL | NOT EXERCISED | Production deployment intentionally unchanged; preview is the validation target. |
 | Owner and Operator latest flows usable | PASS WITH LIMITATION | Local source and protected Vercel preview render the new flow; secure production auth/mode contract remains unverified. |
-| Login and mode switching | FAIL / BLOCKED | Direct production read is reachable without a session; client-side mode buttons are not authorization. |
+| Login and mode switching | BLOCKED — CONTRACT APPROVED | Policy is approved and documented, but secure runtime injection and staging implementation/tests are still required. |
 | Existing operational data readable without change | PASS WITH LIMITATION | Read-only live-versus-backup business-content comparison passed; this is a point-in-time baseline, not a post-production-migration comparison. |
 | No data loss or duplicate operational IDs | PASS WITH LIMITATION | Jobs, Payments, Expenses, and Media ID sets match backup with zero duplicates; no migration write has occurred yet. |
 | Dashboard/report consistency | PASS | Live Dashboard and Recap totals are internally consistent and report zero inconsistencies. |
