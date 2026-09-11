@@ -28,8 +28,8 @@ Scope: Initial read-only audit for migrating the latest Basil UI / Motokraf desi
 ### Current Next.js source
 
 - `frontend/app/page.tsx` contains the current business API wiring for dashboard, recap, jobs, history, payment/close, media, and expenses.
-- The visible app remains a dense Sprint 6-style form/dashboard layout.
-- Owner edit-history flow, monthly PDF/Excel download, the latest mobile shell, and the latest Operator start/check flow are not present in the main Next.js page.
+- The main page now uses the Motokraf logo, separates `Jenis pekerjaan` and `Deskripsi pekerjaan`, exposes `Mulai Kerja`, and labels job inspection as `Periksa pekerjaan`.
+- Print-to-PDF styling is available locally; Owner history editing remains intentionally disabled because no safe production edit endpoint/authorization contract exists.
 - The page explicitly describes mode switching as display-only, not secure authentication/authorization; this is not sufficient evidence for production login/mode acceptance.
 
 ### Latest local demo
@@ -50,14 +50,13 @@ Scope: Initial read-only audit for migrating the latest Basil UI / Motokraf desi
 7. Deploy preview/staging only, then perform read-only smoke and synthetic isolated workflow checks.
 8. Request explicit production approval only after backup, data-integrity, and rollback evidence are complete.
 
-## Files/components expected to change (not changed)
+## Files/components changed in this local migration branch
 
 - `frontend/app/page.tsx`
 - `frontend/app/globals.css`
-- `frontend/app/layout.tsx` and/or a new shared UI component layer if required by the frozen design spec
-- `frontend/public/` or equivalent asset location for the official Motokraf logo, after source verification
-- API routes only if required for a non-destructive Owner edit/report contract; existing backend source remains the source of truth
-- Tests and validation documentation corresponding to any approved API/UI change
+- `frontend/public/motokraf-site-ico.webp` — official logo copied from the checkpoint asset.
+- No API route, Apps Script schema, Sheet header, or production resource was changed.
+- Tests and this validation documentation updated through the local branch evidence.
 
 ## Acceptance gate
 
@@ -65,14 +64,14 @@ Scope: Initial read-only audit for migrating the latest Basil UI / Motokraf desi
 |---|---|---|
 | Production URL identified | PASS | Public Vercel host returned HTTP 200 |
 | Latest design visible on live URL | FAIL | Live page is Sprint 5 lineage |
-| Operator latest flow | NOT EXERCISED | Present only in local demo evidence |
-| Owner latest flow | NOT EXERCISED | Present only in local demo evidence |
+| Operator latest flow | PARTIAL | Main local page has the new labels, `Mulai Kerja`, and `Periksa pekerjaan`; backend workflow remains synthetic/not deployed |
+| Owner latest flow | PARTIAL | Main local page has Motokraf shell and report period; edit-history API is blocked pending safe contract |
 | Existing data unchanged | NOT PROVEN | Backup baseline exists; no pre/post migration comparison because migration has not started |
 | No duplicate IDs | NOT PROVEN | No current production export/read-only dataset available |
 | Dashboard/report consistency | NOT PROVEN | Current live-to-source reconciliation not completed |
-| PDF and Excel download | NOT EXERCISED | Demo-only implementation observed |
-| Motokraf logo correct | PARTIAL | Local visual asset inspected; live asset not verified |
-| 390×844 no horizontal overflow | NOT PROVEN | Local screenshot inspected; live rendered check pending |
+| PDF and Excel download | PARTIAL | Existing local print-to-PDF path and report UI remain available; production report download not exercised |
+| Motokraf logo correct | PASS WITH LIMITATION | Official checkpoint asset is used locally; live asset not verified |
+| 390×844 no horizontal overflow | PASS WITH LIMITATION | Local rendered DOM reports no overflow at current browser width and mobile CSS is present; exact viewport emulation unavailable in current browser capability |
 | Production version/commit identifiable | PASS WITH LIMITATION | Vercel deployment ID and Apps Script version 20 verified; current Vercel source commit linkage is not exposed by CLI output |
 | Rollback available | PASS WITH LIMITATION | Vercel prior READY deployments and Apps Script versions 20/15 available; no rollback executed |
 
@@ -88,8 +87,9 @@ Scope: Initial read-only audit for migrating the latest Basil UI / Motokraf desi
 ## Unresolved blockers
 
 1. Preview/staging deployment and isolated backend/Sheet path are not yet established.
-2. The latest demo uses synthetic localStorage data and does not establish backend-integrated production behavior.
+2. The local browser validation uses an unconfigured API boundary, so no production or real operational write was attempted.
 3. Authentication/authorization and Owner/Operator mode switching require explicit production-scope verification; current source labels mode switching as display-only.
+4. Owner edit-history cannot be enabled safely until a reviewed backend endpoint, authorization rule, audit behavior, and non-destructive test path are provided.
 
 ## Data-safety confirmation
 
@@ -97,4 +97,4 @@ During this audit, no operational data was deleted, reset, moved, edited, or sup
 
 ## Decision
 
-**Do not deploy. Do not claim migration success.** Backup/export and Vercel rollback evidence are now available. Resume only after current Apps Script version/resource identity, staging separation, and local dependency/build gates are resolved.
+**Do not deploy. Do not claim migration success.** Local design/flow implementation is now present and the frontend build plus 4 backend unit tests pass. Backup/export and Vercel rollback evidence are available. Resume only after staging separation, secure authentication/edit contract, and production-like read-only integrity comparison are resolved.
