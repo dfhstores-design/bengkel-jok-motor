@@ -13,7 +13,7 @@ Status: **STAGING VALIDATED — PRODUCTION NOT DEPLOYED**
 - Apps Script staging deployment URL: `https://script.google.com/macros/s/AKfycbztGm1dnZt1FF42V0DD2B-T4BEYQ06aATxeUBhcNHhlehl1Pp8eOTATHMVxp-PQ0XHvsw/exec`
 - Access policy: Anyone, execute as owner, based on the supplied deployment evidence.
 - Apps Script staging project: `Aplikasi Bengkel Jok - API Staging 2026-09-12`.
-- Apps Script staging version: version 12, description `Server-side action gate staging 2026-09-12`.
+- Apps Script staging version: version 13, description `Auth public staging 2026-09-12` (new isolated deployment candidate).
 - Read-only endpoint checks: `listActiveJobs`, `listClosedJobs`, `getDashboard`, and `getRecap` returned successful JSON against the empty staging datastore.
 - Vercel staging project: `aplikasi-bengkel-staging-20260912`.
 - Vercel preview deployment: `https://aplikasi-bengkel-staging-20260912-4vgwr9cll-dfhstores-projects.vercel.app`
@@ -121,7 +121,7 @@ Synthetic records were created only in the isolated staging Sheet and are clearl
 
 - A post-migration comparison cannot exist until a future production deployment is explicitly approved; the current pre-deployment live-versus-backup baseline is complete.
 - Production authentication/authorization and Owner edit-history authorization are not implemented or approved for migration.
-- Staging Web App anonymous accessibility remains unresolved from terminal verification; the deployment UI previously showed a Google-account access policy and the external runtime returned an access error. This must be resolved before end-to-end browser login can be marked PASS.
+- Staging Web App anonymous accessibility remains unresolved. New deployment candidate `AKfycbzFPjFhYxH3m5dVYs2BVBPOxL-ZUYAtuqE1BW3fyfmmsT681lLrnuZBFJJAiM674LKorg` also returned HTTP 302 to Google Sign-In for `listLoginUsers`; it was not wired into Vercel Preview. This must be resolved before end-to-end browser login can be marked PASS.
 - The production endpoint is publicly readable without a verified user session. A server-side authorization design and staging-only test plan are required before any write-capable production release.
 - PDF, Excel, and exact automated 390x844 viewport validation are complete.
 - No code or production resource was changed while performing the export and mobile checks.
@@ -133,4 +133,4 @@ No operational data was changed or deleted by this validation. The only writes a
 
 ## Decision
 
-**Do not deploy production yet.** The production read-only integrity baseline, PDF/Excel evidence, mobile viewport check, and staging auth foundation pass. Production migration remains blocked by unresolved staging Web App access, missing audit/edit-history implementation, and incomplete end-to-end authenticated browser evidence.
+**Do not deploy production yet.** The production read-only integrity baseline, PDF/Excel evidence, mobile viewport check, and staging auth foundation pass. Production migration remains blocked by unresolved staging Web App access, missing audit/edit-history implementation, and incomplete end-to-end authenticated browser evidence. Required control decision: enable an Apps Script Web App deployment demonstrably callable by the Vercel runtime without Google account cookies, or approve a different secure backend runtime; do not add credentials or bypass this control in source code.
