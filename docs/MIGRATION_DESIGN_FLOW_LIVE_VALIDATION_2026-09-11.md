@@ -91,7 +91,7 @@ Scope: Initial read-only audit for migrating the latest Basil UI / Motokraf desi
 3. Authentication/authorization and Owner/Operator mode switching require explicit production-scope verification; current source labels mode switching as display-only.
 4. Owner edit-history cannot be enabled safely until a reviewed backend endpoint, authorization rule, audit behavior, and non-destructive test path are provided.
 5. Vercel staging is isolated and has no environment variables; it remains intentionally disconnected until the Apps Script staging Web App deployment URL and access policy are reviewed.
-6. Apps Script staging source/configuration is provisioned. Web App deployment is **NOT EXERCISED**: the Apps Script deployment dialog remained at `Loading deployment…` / `Loading data…` and was cancelled without creating a deployment. Access policy therefore remains unset. No live Apps Script project was changed.
+6. Apps Script staging source/configuration is provisioned. A private Web App deployment is now active as version 3 with description `Staging synthetic validation 2026-09-12`, executed as the owner and restricted to `Only myself`. The deployment metadata and rollback lineage are verified in Manage deployments. Direct URL smoke access is **NOT EXERCISED** because the controlled browser reported `ERR_BLOCKED_BY_CLIENT`; Vercel staging remains disconnected. No live Apps Script project was changed.
 
 ## Data-safety confirmation
 
@@ -99,4 +99,4 @@ During this audit, no operational data was deleted, reset, moved, edited, or sup
 
 ## Decision
 
-**Do not deploy production. Do not claim migration success.** Local design/flow implementation is present, the frontend build plus 4 backend unit tests pass, backup/export and Vercel rollback evidence are available, and isolated Sheet/Drive/Apps Script staging is provisioned. Resume only after a staging Web App deployment is successfully created, its access policy is explicitly selected, synthetic workflow evidence is collected, and production-like read-only integrity comparison is resolved.
+**Do not deploy production. Do not claim migration success.** Local design/flow implementation is present, the frontend build plus 4 backend unit tests pass, backup/export and Vercel rollback evidence are available, and isolated Sheet/Drive/Apps Script staging is provisioned with a private version 3 deployment. Resume only after direct staging endpoint access is verified, synthetic workflow evidence is collected, and production-like read-only integrity comparison is resolved.
