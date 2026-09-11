@@ -86,11 +86,11 @@ Scope: Initial read-only audit for migrating the latest Basil UI / Motokraf desi
 
 ## Unresolved blockers
 
-1. Preview/staging deployment and isolated backend/Sheet path are not yet established.
+1. Isolated Vercel staging is now established and READY, but an isolated Apps Script/Sheet/Drive backend path is not yet established.
 2. The local browser validation uses an unconfigured API boundary, so no production or real operational write was attempted.
 3. Authentication/authorization and Owner/Operator mode switching require explicit production-scope verification; current source labels mode switching as display-only.
 4. Owner edit-history cannot be enabled safely until a reviewed backend endpoint, authorization rule, audit behavior, and non-destructive test path are provided.
-5. Vercel preview environment is not defined; CLI could identify the production project but could not resolve a custom preview environment. No preview deployment was created.
+5. Vercel staging is isolated and has no environment variables; backend staging still needs to be provisioned before synthetic workflow testing.
 
 ## Data-safety confirmation
 
