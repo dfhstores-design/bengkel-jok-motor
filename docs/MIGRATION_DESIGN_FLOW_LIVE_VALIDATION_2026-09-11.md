@@ -86,7 +86,7 @@ Scope: Initial read-only audit for migrating the latest Basil UI / Motokraf desi
 
 ## Unresolved blockers
 
-1. Isolated Vercel staging is now established and READY, but an isolated Apps Script/Sheet/Drive backend path is not yet established.
+1. Isolated Vercel staging is now established and READY. A new blank Google Sheet `STAGING_MVP_DATA_STORE_2026-09-12` was created for synthetic testing; Apps Script binding, tabs/schema, and isolated Drive media path are still not established.
 2. The local browser validation uses an unconfigured API boundary, so no production or real operational write was attempted.
 3. Authentication/authorization and Owner/Operator mode switching require explicit production-scope verification; current source labels mode switching as display-only.
 4. Owner edit-history cannot be enabled safely until a reviewed backend endpoint, authorization rule, audit behavior, and non-destructive test path are provided.
