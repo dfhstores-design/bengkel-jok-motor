@@ -9,7 +9,7 @@ Scope: Initial read-only audit for migrating the latest Basil UI / Motokraf desi
 - Production URL: `https://aplikasi-bengkel-sprint0.vercel.app`
 - Live HTTP check: **PASS**, HTTP 200; page title identifies the deployed surface as **Aplikasi Bengkel — Sprint 5**.
 - Live design migration: **NOT EXERCISED**; the live surface is not yet the latest Basil/Motokraf implementation.
-- Apps Script deployment/version: **NOT VERIFIED in this audit**. The repository contains historical setup references, but no current read-only deployment/version evidence was established.
+- Apps Script deployment/version: **VERIFIED READ-ONLY** through authenticated `clasp deployments`: version 20, description `Sprint 6 hardening`, plus version 15, description `Sprint 5 dashboard history recap final`; an additional HEAD deployment exists without a release description.
 - Sheet ID / Drive folder: **NOT EXPOSED**. Historical configuration exists locally, but current production identity and access were not revalidated.
 
 ## Repository and rollback audit
@@ -19,7 +19,7 @@ Scope: Initial read-only audit for migrating the latest Basil UI / Motokraf desi
 - Git status: untracked source, reports, demos, screenshots, archives, and QA folders.
 - HEAD/commit: **NONE**; `master` has no commits.
 - Origin remote: **NONE**.
-- Rollback baseline: **PARTIAL PASS**. GitHub checkpoint branch is versioned at `74c0788b8ed8430a812b05cd3cc57a2cdd4ad6e0`; Vercel active production deployment and prior READY production deployment lineage are identifiable. Apps Script rollback lineage remains unverified.
+- Rollback baseline: **PASS WITH LIMITATION**. GitHub checkpoint branch is versioned at `74c0788b8ed8430a812b05cd3cc57a2cdd4ad6e0`; Vercel active production deployment and prior READY production deployment lineage are identifiable; Apps Script versions 20 and 15 are listed for rollback. Exact live Apps Script URL/resource mapping remains intentionally omitted from the sanitized report.
 - Production Vercel deployment: **VERIFIED READY**; active deployment ID `dpl_B7CfXhY12Zzedq2SiGKSc52DXgyn`, production alias `aplikasi-bengkel-sprint0.vercel.app`.
 - Local dependencies: **INCOMPLETE**; `frontend\node_modules` is absent and only `node_modules.incomplete-20260911` exists.
 
@@ -67,14 +67,14 @@ Scope: Initial read-only audit for migrating the latest Basil UI / Motokraf desi
 | Latest design visible on live URL | FAIL | Live page is Sprint 5 lineage |
 | Operator latest flow | NOT EXERCISED | Present only in local demo evidence |
 | Owner latest flow | NOT EXERCISED | Present only in local demo evidence |
-| Existing data unchanged | NOT PROVEN | No pre/post production backup or checksum evidence |
+| Existing data unchanged | NOT PROVEN | Backup baseline exists; no pre/post migration comparison because migration has not started |
 | No duplicate IDs | NOT PROVEN | No current production export/read-only dataset available |
 | Dashboard/report consistency | NOT PROVEN | Current live-to-source reconciliation not completed |
 | PDF and Excel download | NOT EXERCISED | Demo-only implementation observed |
 | Motokraf logo correct | PARTIAL | Local visual asset inspected; live asset not verified |
 | 390×844 no horizontal overflow | NOT PROVEN | Local screenshot inspected; live rendered check pending |
-| Production version/commit identifiable | FAIL | Live title identifies Sprint 5, but workspace has no commit baseline |
-| Rollback available | BLOCKED | No repository commit/remote and no current deployment lineage evidence |
+| Production version/commit identifiable | PASS WITH LIMITATION | Vercel deployment ID and Apps Script version 20 verified; current Vercel source commit linkage is not exposed by CLI output |
+| Rollback available | PASS WITH LIMITATION | Vercel prior READY deployments and Apps Script versions 20/15 available; no rollback executed |
 
 ## Backup evidence
 
@@ -87,11 +87,9 @@ Scope: Initial read-only audit for migrating the latest Basil UI / Motokraf desi
 
 ## Unresolved blockers
 
-1. Current production Apps Script deployment/version and active configuration are not independently verified.
-2. Preview/staging deployment and isolated backend/Sheet path are not yet established.
-3. Local dependency installation is incomplete; build/static/render QA cannot yet be treated as current evidence.
-4. The latest demo uses synthetic localStorage data and does not establish backend-integrated production behavior.
-5. Authentication/authorization and Owner/Operator mode switching require explicit production-scope verification; current source labels mode switching as display-only.
+1. Preview/staging deployment and isolated backend/Sheet path are not yet established.
+2. The latest demo uses synthetic localStorage data and does not establish backend-integrated production behavior.
+3. Authentication/authorization and Owner/Operator mode switching require explicit production-scope verification; current source labels mode switching as display-only.
 
 ## Data-safety confirmation
 
