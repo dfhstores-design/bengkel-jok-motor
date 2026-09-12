@@ -16,8 +16,8 @@ Status: **STAGING VALIDATED — PRODUCTION NOT DEPLOYED**
 - Apps Script staging version: version 21, description `Actor identity staging 2026-09-12`; anonymous access verified from the Vercel runtime.
 - Read-only endpoint checks: `listActiveJobs`, `listClosedJobs`, `getDashboard`, and `getRecap` returned successful JSON before synthetic write validation; subsequent synthetic records are documented below.
 - Vercel staging project: `aplikasi-bengkel-staging-20260912`.
-- Vercel preview deployment: `https://aplikasi-bengkel-staging-20260912-f9f7utkhi-dfhstores-projects.vercel.app`
-- Vercel deployment ID: `dpl_2qe1TLGwoWN9WXsSYJxY316EbYc3`.
+- Vercel preview deployment: `https://aplikasi-bengkel-staging-20260912-hoooyr1uv-dfhstores-projects.vercel.app`
+- Vercel deployment ID: `dpl_61ix3VMsyhzop4GBrJ8oKzb8jpMs`.
 - Vercel target/status: `preview / Ready`.
 - Preview environment variable: encrypted `APPS_SCRIPT_API_URL`, pointing only to the staging Apps Script URL.
 - Local build: `npm run build` passed from `frontend`.
@@ -35,6 +35,7 @@ Status: **STAGING VALIDATED — PRODUCTION NOT DEPLOYED**
 - Browser screenshots: `docs/staging-owner-detail-390x844.png` and `docs/staging-operator-390x844.png`.
 - Owner dashboard now includes a lightweight period bar chart `Pemasukan vs Pengeluaran`, computed from the existing recap source; no new backend/schema field or chart library was added. Preview browser verification found the chart text, viewport `390x844`, document scroll width `390`, and `horizontalOverflow=false`. Screenshot: `docs/staging-owner-chart-390x844.png`.
 - Login now retries once after a transient network/response failure with a short delay; invalid credentials still fail immediately without retrying.
+- UI parity port candidate: the frontend now follows the approved demo structure with Motokraf mobile shell, keypad role login, Owner welcome/insight cards, period chart, bottom navigation, Owner report export controls, Job/Payment/Media detail forms, Expense form, and Owner CLOSED-history edit form. Backend routes and session authorization remain unchanged.
 - A staging UI write test created synthetic `JOB-20260912-0003`. Initial UI refresh briefly showed the previous count because the post-write refresh was not awaited; the frontend now awaits the refresh after Job, Expense, and Close Job writes. No repeat submit was made, and readback confirmed exactly one active `JOB-20260912-0003`.
 - Staging auth foundation: an `AuthUsers` tab was created additively in the isolated staging Sheet with headers `user_id`, `display_name`, `role`, `pin_hash`, `active`, `created_at`, and `updated_at`. It contains two synthetic users only (`owner-demo` and `operator-demo`), with SHA-256 hashes and no plain PIN values. The staging Apps Script deployment was updated to version 10; no operational tab was changed.
 
@@ -120,7 +121,7 @@ Synthetic records were created only in the isolated staging Sheet and are clearl
 - Actor identity smoke: Apps Script version 21 direct POSTs returned `owner-demo (OWNER)` for Job, Payment, and Expense writes; an Operator Expense write returned `operator-demo (OPERATOR)`. No production endpoint was called.
 - Authenticated preview matrix: unauthenticated `/api/dashboard` returned `401`; Owner login returned `200`; authenticated `/api/auth/session`, `/api/dashboard`, `/api/history`, `/api/expenses`, `/api/recap`, and `/api/auth/users` returned `200` with successful payloads. Staging readback contained 2 CLOSED history Jobs and 3 synthetic Expenses. Logout returned `200`, followed by `/api/dashboard` returning `401`.
 - Authenticated UI smoke: preview login loaded the dynamic user dropdown; Owner mode rendered `Beranda Owner`, dashboard/recap, Job start form, CLOSED history, Expense form, and Owner edit detail; Operator mode rendered `MOTOKRAF · OPERATOR` and the Job start flow while hiding Owner-only history/expense editing areas.
-- Updated frontend preview: `https://aplikasi-bengkel-staging-20260912-f9f7utkhi-dfhstores-projects.vercel.app`, deployment `dpl_2qe1TLGwoWN9WXsSYJxY316EbYc3`, Ready after the chart, login-retry, and refresh-race fixes. Unauthenticated Dashboard returned `401`; authenticated Dashboard returned `200` with exactly 1 active synthetic Job (`JOB-20260912-0003`).
+- Updated frontend preview: `https://aplikasi-bengkel-staging-20260912-hoooyr1uv-dfhstores-projects.vercel.app`, deployment `dpl_61ix3VMsyhzop4GBrJ8oKzb8jpMs`, Ready after the approved-demo UI parity port. Local build passed. Full authenticated browser recheck of the new candidate is pending because the browser session timed out during the login/loading window; no production request was made.
 - Production smoke test: not run as a mutating test; live production remains unchanged.
 
 ## Rollback procedure
