@@ -16,8 +16,8 @@ Status: **STAGING VALIDATED — PRODUCTION NOT DEPLOYED**
 - Apps Script staging version: version 21, description `Actor identity staging 2026-09-12`; anonymous access verified from the Vercel runtime.
 - Read-only endpoint checks: `listActiveJobs`, `listClosedJobs`, `getDashboard`, and `getRecap` returned successful JSON before synthetic write validation; subsequent synthetic records are documented below.
 - Vercel staging project: `aplikasi-bengkel-staging-20260912`.
-- Vercel preview deployment: `https://aplikasi-bengkel-staging-20260912-epz7ereg1-dfhstores-projects.vercel.app`
-- Vercel deployment ID: `dpl_Cq7GUxU42EsFzCdx57Xcx8ftQv9J`.
+- Vercel preview deployment: `https://aplikasi-bengkel-staging-20260912-oy110kxib-dfhstores-projects.vercel.app`
+- Vercel deployment ID: `dpl_9xB1FrbnJwvBoDv21oXoPuvx4vuf`.
 - Vercel target/status: `preview / Ready`.
 - Preview environment variable: encrypted `APPS_SCRIPT_API_URL`, pointing only to the staging Apps Script URL.
 - Local build: `npm run build` passed from `frontend`.
@@ -121,7 +121,7 @@ Synthetic records were created only in the isolated staging Sheet and are clearl
 - Actor identity smoke: Apps Script version 21 direct POSTs returned `owner-demo (OWNER)` for Job, Payment, and Expense writes; an Operator Expense write returned `operator-demo (OPERATOR)`. No production endpoint was called.
 - Authenticated preview matrix: unauthenticated `/api/dashboard` returned `401`; Owner login returned `200`; authenticated `/api/auth/session`, `/api/dashboard`, `/api/history`, `/api/expenses`, `/api/recap`, and `/api/auth/users` returned `200` with successful payloads. Staging readback contained 2 CLOSED history Jobs and 3 synthetic Expenses. Logout returned `200`, followed by `/api/dashboard` returning `401`.
 - Authenticated UI smoke: preview login loaded the dynamic user dropdown; Owner mode rendered `Beranda Owner`, dashboard/recap, Job start form, CLOSED history, Expense form, and Owner edit detail; Operator mode rendered `MOTOKRAF · OPERATOR` and the Job start flow while hiding Owner-only history/expense editing areas.
-- Updated frontend preview: `https://aplikasi-bengkel-staging-20260912-epz7ereg1-dfhstores-projects.vercel.app`, deployment `dpl_Cq7GUxU42EsFzCdx57Xcx8ftQv9J`, Ready after the keypad visibility, export-format, and partial-load retry fixes. Local and Vercel builds passed. The prior candidate's authenticated browser smoke passed for Owner and Operator at viewport 390x844; this latest candidate was rebuilt from the same UI with read-only loading/export fixes. No production request was made.
+- Updated frontend preview: `https://aplikasi-bengkel-staging-20260912-oy110kxib-dfhstores-projects.vercel.app`, deployment `dpl_9xB1FrbnJwvBoDv21oXoPuvx4vuf`, Ready after restoring the approved Basil CSS bundle. Fresh visual recheck at 390x844 matched the approved login card and Owner dashboard structure; Owner login, chart rendering, and horizontal-overflow check passed. No production request was made.
 - Production smoke test: not run as a mutating test; live production remains unchanged.
 
 ## Rollback procedure
