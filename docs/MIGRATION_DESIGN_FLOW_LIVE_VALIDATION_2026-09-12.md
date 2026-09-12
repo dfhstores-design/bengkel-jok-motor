@@ -16,8 +16,8 @@ Status: **STAGING VALIDATED — PRODUCTION NOT DEPLOYED**
 - Apps Script staging version: version 21, description `Actor identity staging 2026-09-12`; anonymous access verified from the Vercel runtime.
 - Read-only endpoint checks: `listActiveJobs`, `listClosedJobs`, `getDashboard`, and `getRecap` returned successful JSON before synthetic write validation; subsequent synthetic records are documented below.
 - Vercel staging project: `aplikasi-bengkel-staging-20260912`.
-- Vercel preview deployment: `https://aplikasi-bengkel-staging-20260912-hoooyr1uv-dfhstores-projects.vercel.app`
-- Vercel deployment ID: `dpl_61ix3VMsyhzop4GBrJ8oKzb8jpMs`.
+- Vercel preview deployment: `https://aplikasi-bengkel-staging-20260912-kxegu4nhk-dfhstores-projects.vercel.app`
+- Vercel deployment ID: `dpl_AcLrDh9x7PWCpgGbtF8nxWjH4raA`.
 - Vercel target/status: `preview / Ready`.
 - Preview environment variable: encrypted `APPS_SCRIPT_API_URL`, pointing only to the staging Apps Script URL.
 - Local build: `npm run build` passed from `frontend`.
@@ -121,7 +121,7 @@ Synthetic records were created only in the isolated staging Sheet and are clearl
 - Actor identity smoke: Apps Script version 21 direct POSTs returned `owner-demo (OWNER)` for Job, Payment, and Expense writes; an Operator Expense write returned `operator-demo (OPERATOR)`. No production endpoint was called.
 - Authenticated preview matrix: unauthenticated `/api/dashboard` returned `401`; Owner login returned `200`; authenticated `/api/auth/session`, `/api/dashboard`, `/api/history`, `/api/expenses`, `/api/recap`, and `/api/auth/users` returned `200` with successful payloads. Staging readback contained 2 CLOSED history Jobs and 3 synthetic Expenses. Logout returned `200`, followed by `/api/dashboard` returning `401`.
 - Authenticated UI smoke: preview login loaded the dynamic user dropdown; Owner mode rendered `Beranda Owner`, dashboard/recap, Job start form, CLOSED history, Expense form, and Owner edit detail; Operator mode rendered `MOTOKRAF · OPERATOR` and the Job start flow while hiding Owner-only history/expense editing areas.
-- Updated frontend preview: `https://aplikasi-bengkel-staging-20260912-hoooyr1uv-dfhstores-projects.vercel.app`, deployment `dpl_61ix3VMsyhzop4GBrJ8oKzb8jpMs`, Ready after the approved-demo UI parity port. Local build passed. Full authenticated browser recheck of the new candidate is pending because the browser session timed out during the login/loading window; no production request was made.
+- Updated frontend preview: `https://aplikasi-bengkel-staging-20260912-kxegu4nhk-dfhstores-projects.vercel.app`, deployment `dpl_AcLrDh9x7PWCpgGbtF8nxWjH4raA`, Ready after the keypad visibility fix. Local and Vercel builds passed. Authenticated browser smoke passed for Owner and Operator at viewport 390x844; no production request was made.
 - Production smoke test: not run as a mutating test; live production remains unchanged.
 
 ## Rollback procedure
@@ -137,7 +137,7 @@ Synthetic records were created only in the isolated staging Sheet and are clearl
 - Production authentication/authorization and Owner edit-history authorization are not deployed; staging implementation is verified with synthetic data only.
 - Staging Web App anonymous accessibility is resolved for the new `ANYONE_ANONYMOUS` deployment; the prior Google-account-only candidates remain unused.
 - The production endpoint is publicly readable without a verified user session. A server-side authorization design and staging-only test plan are required before any write-capable production release.
-- PDF, Excel, and exact automated 390x844 viewport validation are complete.
+- PDF and Excel user-download evidence is complete; the current lightweight preview export implementation still needs a fresh browser download assertion before production consideration.
 - No code or production resource was changed while performing the export and mobile checks.
 - An isolated Vercel project named `repo-checkout` was accidentally created by an earlier root-level deploy attempt. It has no production alias and was not deleted; cleanup requires explicit owner approval.
 
@@ -147,4 +147,4 @@ No operational data was changed or deleted by this validation. The only writes a
 
 ## Decision
 
-**Do not deploy production yet.** The production read-only integrity baseline, PDF/Excel evidence, mobile viewport check, staging authenticated smoke, synthetic Owner edit/audit pass, and session-derived actor identity checks pass. Production migration remains blocked by incomplete authenticated browser evidence for all business flows and by the need for an explicit production release gate; production authorization and data writes remain untouched.
+**Do not deploy production yet.** The production read-only integrity baseline, mobile viewport check, staging authenticated Owner/Operator smoke, synthetic Owner edit/audit pass, and session-derived actor identity checks pass. Production migration remains blocked by the explicit release gate, fresh export assertion for the current preview, and the need to complete broader business-flow verification; production authorization and data writes remain untouched.
