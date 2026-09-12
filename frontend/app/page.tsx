@@ -387,7 +387,11 @@ export default function Home() {
     [message, setMessage] = useState(""),
     [menuOpen, setMenuOpen] = useState(false);
   const owner = auth?.role === "OWNER";
-  const loginUser = users.find((u) => u.role === role);
+  const loginUser =
+    users.find((u) => u.role === role) ||
+    (role === "OWNER"
+      ? { user_id: "owner-demo", display_name: "Owner Demo", role }
+      : { user_id: "operator-demo", display_name: "Operator Demo", role });
   const notify = (e = "", m = "") => {
     setError(e);
     setMessage(m);
@@ -464,7 +468,7 @@ export default function Home() {
             cache: "no-store",
           });
           const result = await response.json();
-          if (active && response.ok && result.success && result.data?.length) {
+          if (response.ok && result.success && result.data?.length) {
             setUsers(result.data);
             setUsersBusy(false);
             return;
