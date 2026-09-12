@@ -863,7 +863,16 @@ export default function Home() {
   return (
     <main className="b-app">
       <header className="b-top">
-        <div>
+        {owner && (
+          <button
+            className="b-header-menu"
+            aria-label="Buka menu owner"
+            onClick={() => setMenuOpen(true)}
+          >
+            ☰
+          </button>
+        )}
+        <div className="b-header-title">
           <p className="b-eyebrow">MOTOKRAF · {auth.role}</p>
           <h1>
             {view === "report"
@@ -880,14 +889,17 @@ export default function Home() {
                         ? "Job Aktif"
                         : "Operasional Bengkel"}
           </h1>
-          <small>{auth.display_name}</small>
         </div>
-        <button
-          className="b-avatar"
-          onClick={() => (owner ? setMenuOpen(true) : logout())}
-        >
-          {owner ? "☰" : "↪"}
-        </button>
+        <div className="b-user-chip">
+          <span className="b-user-dot">●</span>
+          <span>{auth.display_name}</span>
+          <button
+            aria-label="Menu akun"
+            onClick={() => (owner ? setMenuOpen(true) : logout())}
+          >
+            {owner ? "⌄" : "↪"}
+          </button>
+        </div>
       </header>
       {menuOpen && owner && (
         <div className="b-drawer-backdrop" onClick={() => setMenuOpen(false)}>
