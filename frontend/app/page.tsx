@@ -402,6 +402,7 @@ export default function Home() {
     [message, setMessage] = useState(""),
     [menuOpen, setMenuOpen] = useState(false);
   const loadVersion = useRef(0);
+  const dashboardRequest = useRef(false);
   const owner = auth?.role === "OWNER";
   const loginUser =
     users.find((u) => u.role === role) ||
@@ -432,12 +433,20 @@ export default function Home() {
     const needsHistory = ["home", "history", "sales", "report"].includes(view);
     const needsExpenses = view === "expense";
     const needsRecap = view !== "history";
-    const needsDashboard = !dash && ["home", "jobs", "new"].includes(view);
+    const needsDashboard =
+      !dash &&
+      !dashboardRequest.current &&
+      ["home", "jobs", "new"].includes(view);
+    if (needsDashboard) {
+      dashboardRequest.current = true;
+      void read("/api/dashboard").then((result) => {
+        dashboardRequest.current = false;
+        if (version === loadVersion.current && result.success && result.data)
+          setDash(result.data);
+      });
+    }
     for (let attempt = 0; attempt < 2; attempt += 1) {
-      const [d, r, h, e] = await Promise.all([
-        needsDashboard
-          ? read("/api/dashboard")
-          : Promise.resolve({ success: true }),
+      const [r, h, e] = await Promise.all([
         needsRecap
           ? read(`/api/recap${qs}`)
           : Promise.resolve({ success: true }),
@@ -449,11 +458,10 @@ export default function Home() {
           : Promise.resolve({ success: true }),
       ]);
       if (version !== loadVersion.current) return;
-      if (d.success && d.data) setDash(d.data);
       if (r.success && r.data) setRecap(r.data);
       if (h.success && h.data) setHistory(h.data || []);
       if (e.success && e.data) setExpenses(e.data || []);
-      if (d.success && r.success && h.success && e.success) {
+      if (r.success && h.success && e.success) {
         setPeriodLoading(false);
         return;
       }
@@ -502,6 +510,7 @@ export default function Home() {
         try {
           const response = await fetch("/api/auth/users", {
             cache: "no-store",
+            signal: AbortSignal.timeout(8000),
           });
           const result = await response.json();
           if (response.ok && result.success && result.data?.length) {
@@ -518,8 +527,11 @@ export default function Home() {
         setError("Daftar pengguna belum termuat. Silakan muat ulang halaman.");
       }
     })();
-    fetch("/api/auth/session", { cache: "no-store" })
-      .then((x) => x.json())
+    fetch("/api/auth/session", {
+      cache: "no-store",
+      signal: AbortSignal.timeout(8000),
+    })
+      .then(async (x) => (x.ok ? x.json() : { success: false }))
       .then((r) => {
         if (r.success) {
           setAuth(r.data);
