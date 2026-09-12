@@ -1259,7 +1259,8 @@ button:disabled {
   padding-right: 8px;
 }
 .b-chart-week .b-bar {
-  min-width: 39px;
+  flex: 1;
+  min-width: 0;
   gap: 5px;
 }
 .b-chart-week .b-stack {
@@ -1270,7 +1271,7 @@ button:disabled {
   align-items: center;
 }
 .b-chart-week .b-stack i {
-  width: 31px;
+  width: min(31px, 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1290,7 +1291,18 @@ button:disabled {
   border-radius: 1px 1px 6px 6px;
 }
 .b-chart-week .b-bar > small {
+  max-width: 100%;
+  overflow: hidden;
   font-size: 9px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.b-refresh-stamp {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: #69756e;
+  font-size: 10px;
+  line-height: 1.35;
 }
 .b-legend i.jobs {
   background: #ecad46;

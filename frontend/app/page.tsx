@@ -91,6 +91,89 @@ const daysAgo = (date: string, days: number) => {
   d.setDate(d.getDate() - days);
   return d.toISOString().slice(0, 10);
 };
+const dateFromKey = (value: string) => new Date(`${value.slice(0, 10)}T00:00:00`);
+const dateKey = (date: Date) => {
+  const offset = date.getTimezoneOffset() * 60000;
+  return new Date(date.getTime() - offset).toISOString().slice(0, 10);
+};
+const formatPeriodDate = (value: string) =>
+  new Intl.DateTimeFormat("id-ID", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  }).format(dateFromKey(value));
+const formatRefreshTime = (value: string) =>
+  `${new Intl.DateTimeFormat("id-ID", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hourCycle: "h23",
+    timeZone: "Asia/Jakarta",
+  }).format(new Date(value))} WIB`;
+type PeriodPoint = { key: string; label: string; income: number; jobs: number };
+function reportPoints(recap: Recap, history: Job[]): PeriodPoint[] {
+  const start = dateFromKey(recap.date_from);
+  const end = dateFromKey(recap.date_to);
+  const span = Math.max(1, Math.round((end.getTime() - start.getTime()) / 86400000) + 1);
+  const entries = history.map((job) => ({
+    day: job.closed_at?.slice(0, 10),
+    income: Number(job.payment?.amount || 0),
+  }));
+  const totalFor = (from: Date, to: Date) =>
+    entries.reduce(
+      (total, item) => {
+        if (!item.day) return total;
+        const day = dateFromKey(item.day);
+        if (day < from || day > to) return total;
+        total.income += item.income;
+        total.jobs += 1;
+        return total;
+      },
+      { income: 0, jobs: 0 },
+    );
+  if (span <= 14) {
+    return Array.from({ length: span }, (_, index) => {
+      const day = new Date(start);
+      day.setDate(start.getDate() + index);
+      const total = totalFor(day, day);
+      return { key: dateKey(day), label: `${day.getDate()}/${day.getMonth() + 1}`, ...total };
+    });
+  }
+  if (span <= 62) {
+    const points: PeriodPoint[] = [];
+    for (let cursor = new Date(start); cursor <= end; cursor.setDate(cursor.getDate() + 7)) {
+      const last = new Date(cursor);
+      last.setDate(Math.min(end.getDate(), cursor.getDate() + 6));
+      const total = totalFor(cursor, last);
+      points.push({
+        key: dateKey(cursor),
+        label: `${cursor.getDate()}/${cursor.getMonth() + 1}–${last.getDate()}/${last.getMonth() + 1}`,
+        ...total,
+      });
+    }
+    return points;
+  }
+  const months: PeriodPoint[] = [];
+  for (let cursor = new Date(start.getFullYear(), start.getMonth(), 1); cursor <= end; cursor.setMonth(cursor.getMonth() + 1)) {
+    const first = new Date(Math.max(cursor.getTime(), start.getTime()));
+    const last = new Date(Math.min(new Date(cursor.getFullYear(), cursor.getMonth() + 1, 0).getTime(), end.getTime()));
+    const total = totalFor(first, last);
+    if (total.income || total.jobs) {
+      months.push({
+        key: `${cursor.getFullYear()}-${cursor.getMonth()}`,
+        label: new Intl.DateTimeFormat("id-ID", { month: "short", year: "2-digit" }).format(cursor),
+        ...total,
+      });
+    }
+  }
+  return months.length
+    ? months
+    : [{ key: recap.date_from, label: formatPeriodDate(recap.date_from), income: 0, jobs: 0 }];
+}
 const blankJob = {
   motorcycle_model: "",
   work_type: "",
@@ -112,32 +195,22 @@ const blankExp = {
 };
 function Chart({ recap, history }: { recap: Recap | null; history: Job[] }) {
   if (!recap) return null;
-  const end = new Date(`${recap.date_to}T00:00:00`);
-  const days = Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(end);
-    d.setDate(end.getDate() - 6 + i);
-    return d.toISOString().slice(0, 10);
-  });
-  const points = days.map((day) => ({
-    day: day.slice(8),
-    income: history
-      .filter((j) => j.closed_at?.slice(0, 10) === day)
-      .reduce((sum, j) => sum + Number(j.payment?.amount || 0), 0),
-    jobs: history.filter((j) => j.closed_at?.slice(0, 10) === day).length,
-  }));
+  const points = reportPoints(recap, history);
   const max = Math.max(...points.map((x) => x.income), 1);
   return (
     <section className="b-card chart-card">
       <div className="b-section-title">
         <div>
           <p className="b-eyebrow">RINGKASAN GRAFIK</p>
-          <h2>Penjualan 7 hari terakhir</h2>
-          <small>Pemasukan dan jumlah Job selesai</small>
+          <h2>Penjualan sesuai periode laporan</h2>
+          <small>
+            {formatPeriodDate(recap.date_from)} – {formatPeriodDate(recap.date_to)} · Pemasukan dan Job selesai
+          </small>
         </div>
       </div>
       <div className="b-chart b-chart-week">
         {points.map((x) => (
-          <div className="b-bar" key={x.day}>
+          <div className="b-bar" key={x.key} title={`${x.label}: ${money(x.income)}, ${x.jobs} Job selesai`}>
             <div className="b-stack">
               <i
                 className="in"
@@ -155,7 +228,7 @@ function Chart({ recap, history }: { recap: Recap | null; history: Job[] }) {
               </i>
             </div>
             <small>
-              {x.day}/{recap.date_to.slice(5, 7)}
+              {x.label}
             </small>
           </div>
         ))}
@@ -178,6 +251,7 @@ function PeriodControls({
   to,
   preset,
   loading,
+  refreshedAt,
   onPresetChange,
   onFromChange,
   onToChange,
@@ -187,6 +261,7 @@ function PeriodControls({
   to: string;
   preset: string;
   loading: boolean;
+  refreshedAt: string | null;
   onPresetChange: (v: string) => void;
   onFromChange: (v: string) => void;
   onToChange: (v: string) => void;
@@ -241,6 +316,11 @@ function PeriodControls({
       <button className="b-primary" onClick={onApply}>
         Terapkan periode
       </button>
+      <p className="b-refresh-stamp" aria-live="polite">
+        {refreshedAt
+          ? `Terakhir diperbarui: ${formatRefreshTime(refreshedAt)}`
+          : "Data belum diperbarui."}
+      </p>
     </section>
   );
 }
@@ -268,18 +348,7 @@ function SalesInsights({
   )
     .sort((a, b) => b.income - a.income || b.jobs - a.jobs)
     .slice(0, 5);
-  const end = new Date(`${recap.date_to}T00:00:00`);
-  const days = Array.from({ length: 7 }, (_, index) => {
-    const day = new Date(end);
-    day.setDate(end.getDate() - 6 + index);
-    return day.toISOString().slice(0, 10);
-  });
-  const points = days.map((day) => ({
-    day,
-    income: history
-      .filter((job) => job.closed_at?.slice(0, 10) === day)
-      .reduce((sum, job) => sum + Number(job.payment?.amount || 0), 0),
-  }));
+  const points = reportPoints(recap, history);
   const max = Math.max(...points.map((point) => point.income), 1);
   return (
     <>
@@ -354,11 +423,11 @@ function SalesInsights({
       </section>
       <section className="b-card">
         <div className="b-section-title">
-          <h2>Grafik omzet harian</h2>
+          <h2>Grafik omzet sesuai periode</h2>
         </div>
         <div className="b-sales-chart">
           {points.map((point) => (
-            <div className="b-sales-bar" key={point.day}>
+            <div className="b-sales-bar" key={point.key} title={`${point.label}: ${money(point.income)}`}>
               <strong
                 style={{
                   height: `${Math.max(point.income ? 12 : 4, Math.round((point.income / max) * 120))}px`,
@@ -366,7 +435,7 @@ function SalesInsights({
               />
               {point.income > 0 && <small>{money(point.income)}</small>}
               <em>
-                {point.day.slice(8)}/{point.day.slice(5, 7)}
+                {point.label}
               </em>
             </div>
           ))}
@@ -398,6 +467,7 @@ export default function Home() {
     [busy, setBusy] = useState(false),
     [detailBusy, setDetailBusy] = useState(false),
     [periodLoading, setPeriodLoading] = useState(false),
+    [lastRefreshed, setLastRefreshed] = useState<string | null>(null),
     [error, setError] = useState(""),
     [message, setMessage] = useState(""),
     [menuOpen, setMenuOpen] = useState(false);
@@ -463,6 +533,7 @@ export default function Home() {
       if (e.success && e.data) setExpenses(e.data || []);
       if (r.success && h.success && e.success) {
         setPeriodLoading(false);
+        setLastRefreshed(new Date().toISOString());
         return;
       }
       if (attempt === 0)
@@ -1055,6 +1126,7 @@ export default function Home() {
             }}
             onApply={applyPeriod}
             loading={periodLoading}
+            refreshedAt={lastRefreshed}
           />
         )}
         {view === "home" && owner && (
@@ -1081,6 +1153,7 @@ export default function Home() {
               }}
               onApply={applyPeriod}
               loading={periodLoading}
+              refreshedAt={lastRefreshed}
             />
             <div className="b-section-title">
               <h2>RINGKASAN HARI INI</h2>
