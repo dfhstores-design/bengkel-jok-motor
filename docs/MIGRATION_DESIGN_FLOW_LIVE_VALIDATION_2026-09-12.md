@@ -16,7 +16,7 @@ Status: **READY TO DEPLOY — AWAITING REVISION APPROVAL — PRODUCTION NOT DEPL
 - Apps Script staging version: version 21, description `Actor identity staging 2026-09-12`; anonymous access verified from the Vercel runtime.
 - Read-only endpoint checks: `listActiveJobs`, `listClosedJobs`, `getDashboard`, and `getRecap` returned successful JSON before synthetic write validation; subsequent synthetic records are documented below.
 - Vercel staging project: `aplikasi-bengkel-staging-20260912`.
-- Vercel preview deployment: `https://aplikasi-bengkel-staging-20260912-laz3k0b4o-dfhstores-projects.vercel.app`
+- Vercel preview deployment: `https://aplikasi-bengkel-staging-20260912-hi7oi6t69-dfhstores-projects.vercel.app`
 - Vercel deployment ID: `dpl_9xB1FrbnJwvBoDv21oXoPuvx4vuf`.
 - Vercel target/status: `preview / Ready`.
 - Preview environment variable: encrypted `APPS_SCRIPT_API_URL`, pointing only to the staging Apps Script URL.
@@ -121,7 +121,7 @@ Synthetic records were created only in the isolated staging Sheet and are clearl
 - Actor identity smoke: Apps Script version 21 direct POSTs returned `owner-demo (OWNER)` for Job, Payment, and Expense writes; an Operator Expense write returned `operator-demo (OPERATOR)`. No production endpoint was called.
 - Authenticated preview matrix: unauthenticated `/api/dashboard` returned `401`; Owner login returned `200`; authenticated `/api/auth/session`, `/api/dashboard`, `/api/history`, `/api/expenses`, `/api/recap`, and `/api/auth/users` returned `200` with successful payloads. Staging readback contained 2 CLOSED history Jobs and 3 synthetic Expenses. Logout returned `200`, followed by `/api/dashboard` returning `401`.
 - Authenticated UI smoke: preview login loaded the dynamic user dropdown; Owner mode rendered `Beranda Owner`, dashboard/recap, Job start form, CLOSED history, Expense form, and Owner edit detail; Operator mode rendered `MOTOKRAF · OPERATOR` and the Job start flow while hiding Owner-only history/expense editing areas.
-- Updated frontend preview: `https://aplikasi-bengkel-staging-20260912-laz3k0b4o-dfhstores-projects.vercel.app`, deployment `dpl_AEZ7TVa8XqdPt9JUwxApvbFD4mcr`, Ready after adding the Owner menu drawer. Fresh visual recheck at 390x844 matched the approved login card, Owner insight cards and 7-day chart structure, and Operator Job Aktif flow; Owner menu actions for transaction export, monthly report, and closing report were exercised, along with role isolation, Job detail Payment/Close/Media controls, and horizontal-overflow checks. No production request was made.
+- Updated frontend preview: `https://aplikasi-bengkel-staging-20260912-hi7oi6t69-dfhstores-projects.vercel.app`, deployment `dpl_6Us4pqcZioUZ53zAdm53miNdki5e`, Ready after aligning the Owner drawer with the supplied reference. Fresh visual recheck at 390x844 confirmed six menu entries: Ringkasan, Job Aktif, Pengeluaran, Riwayat Job, Pengaturan PIN, and Laporan Bulanan; menu open state, navigation, role isolation, and horizontal-overflow checks passed. No production request was made.
 - Production smoke test: not run as a mutating test; live production remains unchanged.
 
 ## Rollback procedure
