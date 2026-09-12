@@ -432,7 +432,7 @@ export default function Home() {
     };
     const needsHistory = ["home", "history", "sales", "report"].includes(view);
     const needsExpenses = view === "expense";
-    const needsRecap = view !== "history";
+    const needsRecap = ["home", "sales", "report"].includes(view);
     const needsDashboard =
       !dash &&
       !dashboardRequest.current &&
