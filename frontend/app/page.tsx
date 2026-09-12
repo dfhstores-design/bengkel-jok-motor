@@ -483,6 +483,7 @@ export default function Home() {
     [detail, setDetail] = useState<Job | null>(null),
     [busy, setBusy] = useState(false),
     [detailBusy, setDetailBusy] = useState(false),
+    [paymentOpen, setPaymentOpen] = useState(false),
     [periodLoading, setPeriodLoading] = useState(false),
     [lastRefreshed, setLastRefreshed] = useState<string | null>(null),
     [error, setError] = useState(""),
@@ -747,7 +748,10 @@ export default function Home() {
       const r = await fetch(`/api/jobs/${encodeURIComponent(id)}`, {
         cache: "no-store",
       }).then((x) => x.json());
-      if (r.success) setDetail(r.data);
+      if (r.success) {
+        setPaymentOpen(false);
+        setDetail(r.data);
+      }
       else setError(r.message);
     } finally {
       setDetailBusy(false);
@@ -1121,7 +1125,7 @@ export default function Home() {
         </p>
       )}
       <div className="b-content">
-        {!(view === "home" && owner) && (
+        {owner && view !== "home" && (
           <PeriodControls
             from={periodFrom}
             to={periodTo}
@@ -1504,7 +1508,7 @@ export default function Home() {
           </section>
         )}
       </div>
-      <nav className="b-bottom">
+      <nav className={`b-bottom ${owner ? "b-owner-bottom" : "b-operator-bottom"}`}>
         {owner ? (
           <>
             <button
@@ -1553,24 +1557,41 @@ export default function Home() {
         </button>
       </nav>
       {detail && (
-        <div className="b-modal" onClick={() => setDetail(null)}>
+        <div
+          className={owner ? "b-modal" : "b-operator-detail"}
+          onClick={() => owner && setDetail(null)}
+        >
           <article onClick={(e) => e.stopPropagation()}>
             <button className="b-close" onClick={() => setDetail(null)}>
-              Tutup
+              {owner ? "Tutup" : "← Kembali"}
             </button>
             <p className="b-eyebrow">JOB DETAIL</p>
             <h2>{detail.motorcycle_model}</h2>
-            <span className="badge">{detail.status}</span>
-            <p>
-              Pekerjaan
-              <br />
-              <strong>{detail.work_description}</strong>
-            </p>
-            <p>
-              Harga deal
-              <br />
-              <strong>{money(Number(detail.agreed_price))}</strong>
-            </p>
+            {owner ? (
+              <>
+                <span className="badge">{detail.status}</span>
+                <p>
+                  Pekerjaan
+                  <br />
+                  <strong>{detail.work_description}</strong>
+                </p>
+                <p>
+                  Harga deal
+                  <br />
+                  <strong>{money(Number(detail.agreed_price))}</strong>
+                </p>
+              </>
+            ) : (
+              <>
+                <p className="b-detail-work">{detail.work_description || "Lainnya"}</p>
+                <div className="b-detail-grid">
+                  <div><small>Status</small><strong>{detail.status}</strong></div>
+                  <div><small>Harga deal</small><strong>{money(Number(detail.agreed_price))}</strong></div>
+                  <div><small>Pelanggan</small><strong>{detail.customer_name || "—"}</strong></div>
+                  <div><small>Tanggal</small><strong>{formatPeriodDate(detail.created_at)}</strong></div>
+                </div>
+              </>
+            )}
             {detail.payment && (
               <p>
                 Payment
@@ -1583,30 +1604,6 @@ export default function Home() {
             )}
             {detail.status === "IN_PROGRESS" && (
               <>
-                <form onSubmit={closeJob}>
-                  <h3>Catat Pembayaran & Close</h3>
-                  <label>
-                    Nominal
-                    <input
-                      required
-                      type="number"
-                      name="amount"
-                      defaultValue={detail.agreed_price}
-                    />
-                  </label>
-                  <label>
-                    Metode
-                    <select name="payment_method">
-                      <option>CASH</option>
-                      <option>TRANSFER</option>
-                      <option>QRIS</option>
-                      <option>OTHER</option>
-                    </select>
-                  </label>
-                  <button className="b-primary" disabled={detailBusy}>
-                    {detailBusy ? "Memproses…" : "Simpan Payment & Close"}
-                  </button>
-                </form>
                 <section className="b-work-media" aria-label="Dokumentasi pekerjaan">
                   <h3>Dokumentasi pekerjaan</h3>
                   <p>Pilih tahap pekerjaan, lalu ambil foto atau video.</p>
@@ -1630,6 +1627,29 @@ export default function Home() {
                     })}
                   </div>
                 </section>
+                {!owner && !paymentOpen && (
+                  <button className="b-primary b-close-job" onClick={() => setPaymentOpen(true)}>
+                    Catat Payment & Close Job
+                  </button>
+                )}
+                {(owner || paymentOpen) && (
+                  <form onSubmit={closeJob} className="b-payment-form">
+                    <h3>Catat Pembayaran & Close</h3>
+                    <label>
+                      Nominal
+                      <input required type="number" name="amount" defaultValue={detail.agreed_price} />
+                    </label>
+                    <label>
+                      Metode
+                      <select name="payment_method">
+                        <option>CASH</option><option>TRANSFER</option><option>QRIS</option><option>OTHER</option>
+                      </select>
+                    </label>
+                    <button className="b-primary" disabled={detailBusy}>
+                      {detailBusy ? "Memproses…" : "Simpan Payment & Close"}
+                    </button>
+                  </form>
+                )}
               </>
             )}
             {detail.status === "CLOSED" && owner && (

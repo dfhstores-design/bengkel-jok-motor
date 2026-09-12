@@ -1655,3 +1655,114 @@ button:disabled {
   color: #fff;
   font-size: 15px;
 }
+
+/* Operator job detail follows the approved full-page Basil/Motokraf layout. */
+.b-operator-bottom {
+  grid-template-columns: repeat(3, 1fr);
+}
+.b-owner-bottom {
+  grid-template-columns: repeat(5, 1fr);
+}
+.b-operator-detail {
+  position: fixed;
+  z-index: 30;
+  top: 82px;
+  bottom: 74px;
+  left: 50%;
+  width: min(100%, 520px);
+  transform: translateX(-50%);
+  overflow: auto;
+  background: #f4f7f5;
+  padding: 20px 22px;
+}
+.b-operator-detail article {
+  width: 100%;
+  background: #fff;
+  border: 1px solid #dfe8e2;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 8px 24px #1937260f;
+}
+.b-operator-detail .b-close {
+  position: static;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #075d35;
+  font-size: 14px;
+  font-weight: 900;
+}
+.b-operator-detail .b-eyebrow {
+  margin: 19px 0 26px;
+}
+.b-operator-detail h2 {
+  margin: 0;
+  font-size: 28px;
+  line-height: 1.2;
+}
+.b-detail-work {
+  margin: 26px 0 16px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  color: #69756e;
+  font-size: 14px;
+}
+.b-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 22px;
+}
+.b-detail-grid > div {
+  display: grid;
+  min-height: 70px;
+  align-content: center;
+  gap: 7px;
+  padding: 12px;
+  border: 1px solid #dfe8e2;
+  border-radius: 11px;
+  background: #f8fbf9;
+}
+.b-detail-grid small {
+  color: #69756e;
+  font-size: 11px;
+}
+.b-detail-grid strong {
+  color: #15221a;
+  font-size: 14px;
+}
+.b-operator-detail .b-work-media {
+  margin-top: 0;
+}
+.b-operator-detail .b-work-media > p {
+  display: none;
+}
+.b-close-job {
+  min-height: 54px;
+  margin-top: 18px;
+  font-size: 17px;
+}
+.b-operator-detail .b-payment-form {
+  display: grid;
+  gap: 13px;
+  margin-top: 17px;
+}
+.b-operator-detail .b-payment-form label {
+  display: grid;
+  gap: 6px;
+  color: #15221a;
+  font-size: 12px;
+  font-weight: 900;
+}
+.b-operator-detail .b-payment-form input,
+.b-operator-detail .b-payment-form select {
+  width: 100%;
+  min-height: 46px;
+  border: 1px solid #cbdad1;
+  border-radius: 10px;
+  background: #fff;
+  padding: 0 12px;
+  color: #15221a;
+  font: inherit;
+}
