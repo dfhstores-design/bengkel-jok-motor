@@ -2,7 +2,14 @@
 import { FormEvent, useEffect, useState } from "react";
 type Mode = "OWNER" | "OPERATOR";
 type View =
-  "home" | "jobs" | "new" | "report" | "expense" | "history" | "settings";
+  | "home"
+  | "jobs"
+  | "new"
+  | "report"
+  | "expense"
+  | "history"
+  | "settings"
+  | "sales";
 type Media = {
   media_id?: string;
   category: string;
@@ -223,6 +230,138 @@ function PeriodControls({
     </section>
   );
 }
+function SalesInsights({
+  recap,
+  history,
+  onRefresh,
+}: {
+  recap: Recap | null;
+  history: Job[];
+  onRefresh: () => void;
+}) {
+  if (!recap) return null;
+  const models = Object.values(
+    history.reduce<
+      Record<string, { model: string; jobs: number; income: number }>
+    >((all, job) => {
+      const model = job.motorcycle_model || "Tanpa model";
+      const item = all[model] || { model, jobs: 0, income: 0 };
+      item.jobs += 1;
+      item.income += Number(job.payment?.amount || 0);
+      all[model] = item;
+      return all;
+    }, {}),
+  )
+    .sort((a, b) => b.income - a.income || b.jobs - a.jobs)
+    .slice(0, 5);
+  const end = new Date(`${recap.date_to}T00:00:00`);
+  const days = Array.from({ length: 7 }, (_, index) => {
+    const day = new Date(end);
+    day.setDate(end.getDate() - 6 + index);
+    return day.toISOString().slice(0, 10);
+  });
+  const points = days.map((day) => ({
+    day,
+    income: history
+      .filter((job) => job.closed_at?.slice(0, 10) === day)
+      .reduce((sum, job) => sum + Number(job.payment?.amount || 0), 0),
+  }));
+  const max = Math.max(...points.map((point) => point.income), 1);
+  return (
+    <>
+      <section className="b-card b-sales-summary">
+        <div className="b-section-title">
+          <div>
+            <h2>Penjualan</h2>
+            <small>Ringkasan berdasarkan data Job dan Payment.</small>
+          </div>
+          <button onClick={onRefresh}>Refresh</button>
+        </div>
+        <div className="b-metrics">
+          <div>
+            <small>Omzet periode</small>
+            <b>{money(recap.snapshot.total_income)}</b>
+          </div>
+          <div>
+            <small>Job CLOSED</small>
+            <b>{recap.snapshot.closed_job_count}</b>
+          </div>
+          <div>
+            <small>Rata-rata Job</small>
+            <b>
+              {money(
+                recap.snapshot.closed_job_count
+                  ? recap.snapshot.total_income /
+                      recap.snapshot.closed_job_count
+                  : 0,
+              )}
+            </b>
+          </div>
+          <div>
+            <small>Margin</small>
+            <b>{money(recap.snapshot.difference)}</b>
+          </div>
+        </div>
+      </section>
+      <section className="b-card">
+        <div className="b-section-title">
+          <h2>Pekerjaan terlaris</h2>
+        </div>
+        {models.length ? (
+          <div className="b-top-products">
+            {models.map((item) => (
+              <div className="b-product" key={item.model}>
+                <div>
+                  <strong>{item.model}</strong>
+                  <small>
+                    {item.jobs} Job · {money(item.income)}
+                  </small>
+                </div>
+                <b>
+                  {Math.round(
+                    (item.income / Math.max(recap.snapshot.total_income, 1)) *
+                      100,
+                  )}
+                  %
+                </b>
+                <span>
+                  <i
+                    style={{
+                      width: `${Math.max(4, Math.round((item.income / Math.max(models[0].income, 1)) * 100))}%`,
+                    }}
+                  />
+                </span>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="empty">Belum ada Job CLOSED pada periode ini.</p>
+        )}
+      </section>
+      <section className="b-card">
+        <div className="b-section-title">
+          <h2>Grafik omzet harian</h2>
+        </div>
+        <div className="b-sales-chart">
+          {points.map((point) => (
+            <div className="b-sales-bar" key={point.day}>
+              <strong
+                style={{
+                  height: `${Math.max(point.income ? 12 : 4, Math.round((point.income / max) * 120))}px`,
+                }}
+              />
+              {point.income > 0 && <small>{money(point.income)}</small>}
+              <em>
+                {point.day.slice(8)}/{point.day.slice(5, 7)}
+              </em>
+            </div>
+          ))}
+        </div>
+      </section>
+    </>
+  );
+}
+
 export default function Home() {
   const today = localToday();
   const [periodFrom, setPeriodFrom] = useState(monthStart(today)),
@@ -729,15 +868,17 @@ export default function Home() {
           <h1>
             {view === "report"
               ? "Laporan Owner"
-              : view === "history"
-                ? "Riwayat Job"
-                : view === "expense"
-                  ? "Pengeluaran"
-                  : view === "settings"
-                    ? "Pengaturan PIN"
-                    : view === "jobs"
-                      ? "Job Aktif"
-                      : "Operasional Bengkel"}
+              : view === "sales"
+                ? "Penjualan"
+                : view === "history"
+                  ? "Riwayat Job"
+                  : view === "expense"
+                    ? "Pengeluaran"
+                    : view === "settings"
+                      ? "Pengaturan PIN"
+                      : view === "jobs"
+                        ? "Job Aktif"
+                        : "Operasional Bengkel"}
           </h1>
           <small>{auth.display_name}</small>
         </div>
@@ -803,6 +944,14 @@ export default function Home() {
                 }}
               >
                 <span>▤</span>Laporan Bulanan
+              </button>
+              <button
+                onClick={() => {
+                  setMenuOpen(false);
+                  setView("sales");
+                }}
+              >
+                <span>↗</span>Penjualan
               </button>
             </nav>
           </aside>
@@ -1009,6 +1158,13 @@ export default function Home() {
             </section>
           </>
         )}
+        {view === "sales" && owner && (
+          <SalesInsights
+            recap={recap}
+            history={history}
+            onRefresh={() => load()}
+          />
+        )}
         {view === "report" && owner && (
           <section className="b-card b-form">
             <p className="b-eyebrow">LAPORAN OWNER</p>
@@ -1182,22 +1338,22 @@ export default function Home() {
               ⌂<small>Ringkasan</small>
             </button>
             <button
-              className={view === "jobs" ? "active" : ""}
-              onClick={() => setView("jobs")}
-            >
-              ▣<small>Job</small>
-            </button>
-            <button
               className={view === "expense" ? "active" : ""}
               onClick={() => setView("expense")}
             >
               🛒<small>Belanja</small>
             </button>
             <button
-              className={view === "history" ? "active" : ""}
-              onClick={() => setView("history")}
+              className={view === "sales" ? "active" : ""}
+              onClick={() => setView("sales")}
             >
-              ▤<small>Riwayat</small>
+              ↗<small>Penjualan</small>
+            </button>
+            <button
+              className={view === "report" ? "active" : ""}
+              onClick={() => setView("report")}
+            >
+              ▤<small>Laporan</small>
             </button>
           </>
         ) : (
