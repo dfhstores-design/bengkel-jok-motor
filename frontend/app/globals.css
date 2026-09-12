@@ -990,7 +990,7 @@ button:disabled {
   display: block;
   margin-top: 2px;
   font-size: 11px;
-  opacity: .82;
+  opacity: 0.82;
 }
 .b-user-chip {
   max-width: 145px;
@@ -1095,10 +1095,18 @@ button:disabled {
   background: #dff5e6;
   font-size: 17px;
 }
-.b-metrics > div:nth-child(2) .b-metric-icon { background: #eaf4ff; }
-.b-metrics > div:nth-child(3) .b-metric-icon { background: #fff0c9; }
-.b-metrics > div:nth-child(4) .b-metric-icon { background: #f4e7ff; }
-.b-metrics b { font-size: 18px; }
+.b-metrics > div:nth-child(2) .b-metric-icon {
+  background: #eaf4ff;
+}
+.b-metrics > div:nth-child(3) .b-metric-icon {
+  background: #fff0c9;
+}
+.b-metrics > div:nth-child(4) .b-metric-icon {
+  background: #f4e7ff;
+}
+.b-metrics b {
+  font-size: 18px;
+}
 .b-bottom {
   height: 74px;
   padding: 5px 5px calc(5px + env(safe-area-inset-bottom));
@@ -1107,13 +1115,27 @@ button:disabled {
   min-width: 0;
   font-size: 10px;
 }
-.b-bottom button small { font-size: 10px; }
+.b-bottom button small {
+  font-size: 10px;
+}
 @media (max-width: 380px) {
-  .b-content { padding-left: 13px; padding-right: 13px; }
-  .b-top { padding-left: 13px; padding-right: 13px; }
-  .b-metrics > div { min-height: 112px; }
-  .b-metrics b { font-size: 16px; }
-  .b-bottom button { font-size: 9px; }
+  .b-content {
+    padding-left: 13px;
+    padding-right: 13px;
+  }
+  .b-top {
+    padding-left: 13px;
+    padding-right: 13px;
+  }
+  .b-metrics > div {
+    min-height: 112px;
+  }
+  .b-metrics b {
+    font-size: 16px;
+  }
+  .b-bottom button {
+    font-size: 9px;
+  }
 }
 .chart-panel {
   margin-top: 18px;
@@ -1426,9 +1448,15 @@ button:disabled {
   border-radius: 10px;
   background: #dff5e6;
 }
-.b-metrics > div:nth-child(2) .b-metric-icon { background: #eaf4ff; }
-.b-metrics > div:nth-child(3) .b-metric-icon { background: #fff0c9; }
-.b-metrics > div:nth-child(4) .b-metric-icon { background: #f4e7ff; }
+.b-metrics > div:nth-child(2) .b-metric-icon {
+  background: #eaf4ff;
+}
+.b-metrics > div:nth-child(3) .b-metric-icon {
+  background: #fff0c9;
+}
+.b-metrics > div:nth-child(4) .b-metric-icon {
+  background: #f4e7ff;
+}
 .b-sales-summary .b-section-title button {
   background: #eef4f0;
   color: #075d35;

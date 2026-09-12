@@ -86,6 +86,11 @@ const localToday = () => {
     .slice(0, 10);
 };
 const monthStart = (date: string) => `${date.slice(0, 7)}-01`;
+const daysAgo = (date: string, days: number) => {
+  const d = new Date(`${date}T00:00:00`);
+  d.setDate(d.getDate() - days);
+  return d.toISOString().slice(0, 10);
+};
 const blankJob = {
   motorcycle_model: "",
   work_type: "",
@@ -186,19 +191,28 @@ function PeriodControls({
   onApply: () => void;
 }) {
   return (
-    <section className={`b-card b-global-period ${preset === "custom" ? "is-custom" : ""}`}>
+    <section
+      className={`b-card b-global-period ${preset === "custom" ? "is-custom" : ""}`}
+    >
       <div className="b-period-picker">
         <small>Periode laporan</small>
-        <select aria-label="Preset periode" value={preset} onChange={(e) => onPresetChange(e.target.value)}>
-          <option value="month">Bulan ini</option>
-          <option value="3m">3 bulan terakhir</option>
+        <select
+          aria-label="Preset periode"
+          value={preset}
+          onChange={(e) => onPresetChange(e.target.value)}
+        >
+          <option value="7d">7 hari</option>
+          <option value="14d">14 hari</option>
+          <option value="30d">30 hari</option>
+          <option value="today">Hari ini</option>
+          <option value="90d">90 hari</option>
           <option value="all">Semua data</option>
           <option value="custom">Tanggal tertentu</option>
         </select>
       </div>
       <div className="b-period-date">
         <b>{to}</b>
-        <span>Data tercatat dalam periode</span>
+        <span>Data aktual dari aplikasi</span>
       </div>
       <div className="b-date-range">
         <label>
@@ -360,9 +374,9 @@ function SalesInsights({
 
 export default function Home() {
   const today = localToday();
-  const [periodFrom, setPeriodFrom] = useState(monthStart(today)),
+  const [periodFrom, setPeriodFrom] = useState(daysAgo(today, 6)),
     [periodTo, setPeriodTo] = useState(today),
-    [periodPreset, setPeriodPreset] = useState("month");
+    [periodPreset, setPeriodPreset] = useState("7d");
   const [auth, setAuth] = useState<Auth | null | undefined>(undefined),
     [users, setUsers] = useState<LoginUser[]>([]),
     [usersBusy, setUsersBusy] = useState(true),
@@ -432,20 +446,17 @@ export default function Home() {
   function choosePreset(value: string) {
     setPeriodPreset(value);
     const end = localToday();
-    if (value === "month") {
-      const from = monthStart(end);
+    if (["7d", "14d", "30d", "90d"].includes(value)) {
+      const from = daysAgo(end, Number(value.slice(0, -1)) - 1);
       setPeriodFrom(from);
       setPeriodTo(end);
       load(from, end);
       return;
     }
-    if (value === "3m") {
-      const d = new Date(`${end}T00:00:00`);
-      d.setMonth(d.getMonth() - 2);
-      const from = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-01`;
-      setPeriodFrom(from);
+    if (value === "today") {
+      setPeriodFrom(end);
       setPeriodTo(end);
-      load(from, end);
+      load(end, end);
       return;
     }
     if (value === "all") {
@@ -897,7 +908,9 @@ export default function Home() {
           </button>
           <div className="b-header-title">
             <strong>{owner ? "OWNER" : "OPERATOR"}</strong>
-            <small>{owner ? "Ringkasan operasional" : "Jalankan pekerjaan hari ini"}</small>
+            <small>
+              {owner ? "Ringkasan operasional" : "Jalankan pekerjaan hari ini"}
+            </small>
           </div>
         </div>
         <div className="b-user-chip">
@@ -985,21 +998,23 @@ export default function Home() {
         </p>
       )}
       <div className="b-content">
-        {!(view === "home" && owner) && <PeriodControls
-          from={periodFrom}
-          to={periodTo}
-          preset={periodPreset}
-          onPresetChange={choosePreset}
-          onFromChange={(v) => {
-            setPeriodFrom(v);
-            setPeriodPreset("custom");
-          }}
-          onToChange={(v) => {
-            setPeriodTo(v);
-            setPeriodPreset("custom");
-          }}
-          onApply={applyPeriod}
-        />}
+        {!(view === "home" && owner) && (
+          <PeriodControls
+            from={periodFrom}
+            to={periodTo}
+            preset={periodPreset}
+            onPresetChange={choosePreset}
+            onFromChange={(v) => {
+              setPeriodFrom(v);
+              setPeriodPreset("custom");
+            }}
+            onToChange={(v) => {
+              setPeriodTo(v);
+              setPeriodPreset("custom");
+            }}
+            onApply={applyPeriod}
+          />
+        )}
         {view === "home" && owner && (
           <>
             <section className="b-card b-welcome">
@@ -1026,7 +1041,9 @@ export default function Home() {
             />
             <div className="b-section-title">
               <h2>RINGKASAN HARI INI</h2>
-              <button className="b-refresh-link" onClick={() => load()}>Refresh</button>
+              <button className="b-refresh-link" onClick={() => load()}>
+                Refresh
+              </button>
             </div>
             <div className="b-metrics">
               <div>
