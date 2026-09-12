@@ -186,24 +186,20 @@ function PeriodControls({
   onApply: () => void;
 }) {
   return (
-    <section className="b-card b-global-period">
-      <div>
-        <p className="b-eyebrow">PERIODE DATA</p>
-        <h2>Pilih periode</h2>
-        <small>
-          Ringkasan, Job, Belanja, dan Riwayat mengikuti periode ini.
-        </small>
+    <section className={`b-card b-global-period ${preset === "custom" ? "is-custom" : ""}`}>
+      <div className="b-period-picker">
+        <small>Periode laporan</small>
+        <select aria-label="Preset periode" value={preset} onChange={(e) => onPresetChange(e.target.value)}>
+          <option value="month">Bulan ini</option>
+          <option value="3m">3 bulan terakhir</option>
+          <option value="all">Semua data</option>
+          <option value="custom">Tanggal tertentu</option>
+        </select>
       </div>
-      <select
-        aria-label="Preset periode"
-        value={preset}
-        onChange={(e) => onPresetChange(e.target.value)}
-      >
-        <option value="month">Bulan ini</option>
-        <option value="3m">3 bulan terakhir</option>
-        <option value="all">Semua data</option>
-        <option value="custom">Tanggal tertentu</option>
-      </select>
+      <div className="b-period-date">
+        <b>{to}</b>
+        <span>Data tercatat dalam periode</span>
+      </div>
       <div className="b-date-range">
         <label>
           Dari
@@ -891,35 +887,21 @@ export default function Home() {
   return (
     <main className="b-app">
       <header className="b-top">
-        {owner && (
+        <div className="b-top-left">
           <button
             className="b-header-menu"
-            aria-label="Buka menu owner"
-            onClick={() => setMenuOpen(true)}
+            aria-label={owner ? "Buka menu owner" : "Buka daftar job"}
+            onClick={() => (owner ? setMenuOpen(true) : setView("jobs"))}
           >
             ☰
           </button>
-        )}
-        <div className="b-header-title">
-          <p className="b-eyebrow">MOTOKRAF · {auth.role}</p>
-          <h1>
-            {view === "report"
-              ? "Laporan Owner"
-              : view === "sales"
-                ? "Penjualan"
-                : view === "history"
-                  ? "Riwayat Job"
-                  : view === "expense"
-                    ? "Pengeluaran"
-                    : view === "settings"
-                      ? "Pengaturan PIN"
-                      : view === "jobs"
-                        ? "Job Aktif"
-                        : "Operasional Bengkel"}
-          </h1>
+          <div className="b-header-title">
+            <strong>{owner ? "OWNER" : "OPERATOR"}</strong>
+            <small>{owner ? "Ringkasan operasional" : "Jalankan pekerjaan hari ini"}</small>
+          </div>
         </div>
         <div className="b-user-chip">
-          <span className="b-user-dot">●</span>
+          <span className="b-user-dot">{owner ? "O" : "P"}</span>
           <span>{auth.display_name}</span>
           <button
             aria-label="Menu akun"
@@ -1003,7 +985,7 @@ export default function Home() {
         </p>
       )}
       <div className="b-content">
-        <PeriodControls
+        {!(view === "home" && owner) && <PeriodControls
           from={periodFrom}
           to={periodTo}
           preset={periodPreset}
@@ -1017,7 +999,7 @@ export default function Home() {
             setPeriodPreset("custom");
           }}
           onApply={applyPeriod}
-        />
+        />}
         {view === "home" && owner && (
           <>
             <section className="b-card b-welcome">
@@ -1027,33 +1009,43 @@ export default function Home() {
               </div>
               <img src="/motokraf-site-ico.webp" alt="Motokraf" />
             </section>
-            <section className="b-card b-period">
-              <div>
-                <small>Periode laporan</small>
-                <strong>{period}</strong>
-              </div>
-              <div className="b-period-actions">
-                <button onClick={() => load()}>Refresh</button>
-                <button onClick={() => setView("report")}>Laporan</button>
-              </div>
-            </section>
+            <PeriodControls
+              from={periodFrom}
+              to={periodTo}
+              preset={periodPreset}
+              onPresetChange={choosePreset}
+              onFromChange={(v) => {
+                setPeriodFrom(v);
+                setPeriodPreset("custom");
+              }}
+              onToChange={(v) => {
+                setPeriodTo(v);
+                setPeriodPreset("custom");
+              }}
+              onApply={applyPeriod}
+            />
             <div className="b-section-title">
               <h2>RINGKASAN HARI INI</h2>
+              <button className="b-refresh-link" onClick={() => load()}>Refresh</button>
             </div>
             <div className="b-metrics">
               <div>
+                <span className="b-metric-icon">🔧</span>
                 <small>Job aktif</small>
                 <b>{dash?.active_job_count || 0}</b>
               </div>
               <div>
+                <span className="b-metric-icon">💵</span>
                 <small>Pemasukan periode</small>
                 <b>{money(recap?.snapshot.total_income || 0)}</b>
               </div>
               <div>
+                <span className="b-metric-icon">💵</span>
                 <small>Pengeluaran periode</small>
                 <b>{money(recap?.snapshot.total_expense || 0)}</b>
               </div>
               <div>
+                <span className="b-metric-icon">🔧</span>
                 <small>Job selesai</small>
                 <b>{recap?.snapshot.closed_job_count || 0}</b>
               </div>
@@ -1378,22 +1370,22 @@ export default function Home() {
               ⌂<small>Ringkasan</small>
             </button>
             <button
+              className={view === "jobs" ? "active" : ""}
+              onClick={() => setView("jobs")}
+            >
+              ▣<small>Job</small>
+            </button>
+            <button
               className={view === "expense" ? "active" : ""}
               onClick={() => setView("expense")}
             >
               🛒<small>Belanja</small>
             </button>
             <button
-              className={view === "sales" ? "active" : ""}
-              onClick={() => setView("sales")}
+              className={view === "history" ? "active" : ""}
+              onClick={() => setView("history")}
             >
-              ↗<small>Penjualan</small>
-            </button>
-            <button
-              className={view === "report" ? "active" : ""}
-              onClick={() => setView("report")}
-            >
-              ▤<small>Laporan</small>
+              ▤<small>Riwayat</small>
             </button>
           </>
         ) : (
