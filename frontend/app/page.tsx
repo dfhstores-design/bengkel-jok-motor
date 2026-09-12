@@ -193,8 +193,24 @@ const blankExp = {
   supplier: "",
   notes: "",
 };
-function Chart({ recap, history }: { recap: Recap | null; history: Job[] }) {
+function Chart({
+  recap,
+  history,
+  loading,
+}: {
+  recap: Recap | null;
+  history: Job[];
+  loading: boolean;
+}) {
   if (!recap) return null;
+  if (loading)
+    return (
+      <section className="b-card chart-card b-chart-pending" aria-live="polite">
+        <p className="b-eyebrow">RINGKASAN GRAFIK</p>
+        <h2>Menyiapkan grafik periode laporan…</h2>
+        <small>Rincian pemasukan dan Job selesai sedang dimuat.</small>
+      </section>
+    );
   const points = reportPoints(recap, history);
   const max = Math.max(...points.map((x) => x.income), 1);
   return (
@@ -492,7 +508,7 @@ export default function Home() {
       try {
         const response = await fetch(path, {
           cache: "no-store",
-          signal: AbortSignal.timeout(10000),
+          signal: AbortSignal.timeout(15000),
         });
         if (!response.ok) return { success: false };
         return await response.json();
@@ -516,19 +532,15 @@ export default function Home() {
       });
     }
     for (let attempt = 0; attempt < 2; attempt += 1) {
-      const [r, h, e] = await Promise.all([
-        needsRecap
-          ? read(`/api/recap${qs}`)
-          : Promise.resolve({ success: true }),
-        needsHistory
-          ? read(`/api/history${qs}`)
-          : Promise.resolve({ success: true }),
-        needsExpenses
-          ? read(`/api/expenses${qs}`)
-          : Promise.resolve({ success: true }),
-      ]);
+      // Apps Script is more reliable when the report reads are not competing
+      // with each other. Recap appears first; detailed history follows for charts.
+      const r = needsRecap ? await read(`/api/recap${qs}`) : { success: true };
       if (version !== loadVersion.current) return;
       if (r.success && r.data) setRecap(r.data);
+      const h = needsHistory ? await read(`/api/history${qs}`) : { success: true };
+      if (version !== loadVersion.current) return;
+      const e = needsExpenses ? await read(`/api/expenses${qs}`) : { success: true };
+      if (version !== loadVersion.current) return;
       if (h.success && h.data) setHistory(h.data || []);
       if (e.success && e.data) setExpenses(e.data || []);
       if (r.success && h.success && e.success) {
@@ -1204,7 +1216,7 @@ export default function Home() {
                 <strong>{money(recap?.snapshot.difference || 0)}</strong>
               </div>
             </section>
-            <Chart recap={recap} history={history} />
+            <Chart recap={recap} history={history} loading={periodLoading} />
             <button className="b-secondary" onClick={() => setView("history")}>
               Lihat Riwayat CLOSED
             </button>
