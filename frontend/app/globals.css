@@ -1399,8 +1399,7 @@ button:disabled {
   display: block;
 }
 .b-global-period > div:first-child > .b-eyebrow,
-.b-global-period > div:first-child > h2,
-.b-global-period > div:first-child > small {
+.b-global-period > div:first-child > h2 {
   display: none;
 }
 .b-global-period .b-period-picker small,
