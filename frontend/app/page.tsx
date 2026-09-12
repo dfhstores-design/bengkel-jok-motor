@@ -1,5 +1,5 @@
 "use client";
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 type Mode = "OWNER" | "OPERATOR";
 type View =
   | "home"
@@ -177,6 +177,7 @@ function PeriodControls({
   from,
   to,
   preset,
+  loading,
   onPresetChange,
   onFromChange,
   onToChange,
@@ -185,6 +186,7 @@ function PeriodControls({
   from: string;
   to: string;
   preset: string;
+  loading: boolean;
   onPresetChange: (v: string) => void;
   onFromChange: (v: string) => void;
   onToChange: (v: string) => void;
@@ -212,7 +214,9 @@ function PeriodControls({
       </div>
       <div className="b-period-date">
         <b>{to}</b>
-        <span>Data aktual dari aplikasi</span>
+        <span aria-live="polite">
+          {loading ? "Memuat data…" : "Data aktual dari aplikasi"}
+        </span>
       </div>
       <div className="b-date-range">
         <label>
@@ -393,9 +397,11 @@ export default function Home() {
     [detail, setDetail] = useState<Job | null>(null),
     [busy, setBusy] = useState(false),
     [detailBusy, setDetailBusy] = useState(false),
+    [periodLoading, setPeriodLoading] = useState(false),
     [error, setError] = useState(""),
     [message, setMessage] = useState(""),
     [menuOpen, setMenuOpen] = useState(false);
+  const loadVersion = useRef(0);
   const owner = auth?.role === "OWNER";
   const loginUser =
     users.find((u) => u.role === role) ||
@@ -408,33 +414,56 @@ export default function Home() {
   };
   async function load(from = periodFrom, to = periodTo) {
     if (!auth) return;
+    const version = ++loadVersion.current;
+    setPeriodLoading(true);
     const qs = `?date_from=${encodeURIComponent(from)}&date_to=${encodeURIComponent(to)}`;
     const read = async (path: string) => {
       try {
-        const response = await fetch(path, { cache: "no-store" });
+        const response = await fetch(path, {
+          cache: "no-store",
+          signal: AbortSignal.timeout(10000),
+        });
+        if (!response.ok) return { success: false };
         return await response.json();
       } catch {
         return { success: false };
       }
     };
+    const needsHistory = ["home", "history", "sales", "report"].includes(view);
+    const needsExpenses = view === "expense";
+    const needsRecap = view !== "history";
+    const needsDashboard = !dash && ["home", "jobs", "new"].includes(view);
     for (let attempt = 0; attempt < 2; attempt += 1) {
       const [d, r, h, e] = await Promise.all([
-        read("/api/dashboard"),
-        read(`/api/recap${qs}`),
-        read(`/api/history${qs}`),
-        read(`/api/expenses${qs}`),
+        needsDashboard
+          ? read("/api/dashboard")
+          : Promise.resolve({ success: true }),
+        needsRecap
+          ? read(`/api/recap${qs}`)
+          : Promise.resolve({ success: true }),
+        needsHistory
+          ? read(`/api/history${qs}`)
+          : Promise.resolve({ success: true }),
+        needsExpenses
+          ? read(`/api/expenses${qs}`)
+          : Promise.resolve({ success: true }),
       ]);
-      if (d.success) setDash(d.data);
-      if (r.success) setRecap(r.data);
-      if (h.success) setHistory(h.data || []);
-      if (e.success) setExpenses(e.data || []);
-      if (d.success && r.success && h.success && e.success) return;
+      if (version !== loadVersion.current) return;
+      if (d.success && d.data) setDash(d.data);
+      if (r.success && r.data) setRecap(r.data);
+      if (h.success && h.data) setHistory(h.data || []);
+      if (e.success && e.data) setExpenses(e.data || []);
+      if (d.success && r.success && h.success && e.success) {
+        setPeriodLoading(false);
+        return;
+      }
       if (attempt === 0)
         await new Promise((resolve) => setTimeout(resolve, 900));
     }
-    setError(
-      "Data periode belum termuat lengkap. Tekan Terapkan periode untuk mencoba lagi.",
-    );
+    if (version === loadVersion.current) {
+      setPeriodLoading(false);
+      setError("Data periode belum termuat lengkap. Coba lagi sebentar.");
+    }
   }
   function applyPeriod() {
     if (!periodFrom || !periodTo || periodFrom > periodTo) {
@@ -504,7 +533,7 @@ export default function Home() {
   }, []);
   useEffect(() => {
     if (auth) load();
-  }, [auth]);
+  }, [auth, view]);
   async function login(e: FormEvent) {
     e.preventDefault();
     if (authBusy || !loginUser || pin.length < 4) return;
@@ -1013,6 +1042,7 @@ export default function Home() {
               setPeriodPreset("custom");
             }}
             onApply={applyPeriod}
+            loading={periodLoading}
           />
         )}
         {view === "home" && owner && (
@@ -1038,6 +1068,7 @@ export default function Home() {
                 setPeriodPreset("custom");
               }}
               onApply={applyPeriod}
+              loading={periodLoading}
             />
             <div className="b-section-title">
               <h2>RINGKASAN HARI INI</h2>
