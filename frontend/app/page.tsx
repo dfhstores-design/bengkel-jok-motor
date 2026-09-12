@@ -1,5 +1,5 @@
 "use client";
-import { FormEvent, useEffect, useRef, useState } from "react";
+import { ChangeEvent, FormEvent, useEffect, useRef, useState } from "react";
 type Mode = "OWNER" | "OPERATOR";
 type View =
   | "home"
@@ -781,16 +781,8 @@ export default function Home() {
       setDetailBusy(false);
     }
   }
-  async function uploadMedia(e: FormEvent) {
-    e.preventDefault();
+  async function uploadMedia(file: File, category: "BEFORE" | "PROCESS" | "AFTER") {
     if (!detail || detailBusy) return;
-    const form = e.currentTarget as HTMLFormElement;
-    const file = (form.elements.namedItem("file") as HTMLInputElement)
-      .files?.[0];
-    if (!file) {
-      setError("Pilih file media terlebih dahulu.");
-      return;
-    }
     setDetailBusy(true);
     try {
       const encoded = await new Promise<string>((resolve, reject) => {
@@ -800,13 +792,12 @@ export default function Home() {
         reader.onerror = () => reject(new Error("read"));
         reader.readAsDataURL(file);
       });
-      const d = new FormData(form);
       const r = await fetch("/api/media", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           job_id: detail.job_id,
-          category: String(d.get("category")),
+          category,
           media_type: file.type.startsWith("video/") ? "VIDEO" : "PHOTO",
           file_name: file.name,
           mime_type: file.type,
@@ -820,8 +811,7 @@ export default function Home() {
         return;
       }
       await openDetail(detail.job_id);
-      notify("", "Media berhasil diunggah.");
-      form.reset();
+      notify("", `Dokumentasi ${category.toLowerCase()} berhasil diunggah.`);
     } catch {
       setError(
         "Upload media gagal. Job tetap aman dan file dapat dicoba lagi.",
@@ -829,6 +819,14 @@ export default function Home() {
     } finally {
       setDetailBusy(false);
     }
+  }
+  function chooseMedia(
+    e: ChangeEvent<HTMLInputElement>,
+    category: "BEFORE" | "PROCESS" | "AFTER",
+  ) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (file) void uploadMedia(file, category);
   }
   async function editHistory(e: FormEvent) {
     e.preventDefault();
@@ -1609,30 +1607,29 @@ export default function Home() {
                     {detailBusy ? "Memproses…" : "Simpan Payment & Close"}
                   </button>
                 </form>
-                <form onSubmit={uploadMedia}>
-                  <h3>Tambah Media</h3>
-                  <label>
-                    Kategori
-                    <select name="category" defaultValue="BEFORE">
-                      <option>BEFORE</option>
-                      <option>PROCESS</option>
-                      <option>AFTER</option>
-                    </select>
-                  </label>
-                  <label>
-                    File foto/video
-                    <input
-                      required
-                      name="file"
-                      type="file"
-                      accept="image/*,video/mp4,video/webm,video/quicktime"
-                      capture="environment"
-                    />
-                  </label>
-                  <button className="b-primary" disabled={detailBusy}>
-                    {detailBusy ? "Mengunggah…" : "Upload Media"}
-                  </button>
-                </form>
+                <section className="b-work-media" aria-label="Dokumentasi pekerjaan">
+                  <h3>Dokumentasi pekerjaan</h3>
+                  <p>Pilih tahap pekerjaan, lalu ambil foto atau video.</p>
+                  <div className="b-media-slots">
+                    {(["BEFORE", "PROCESS", "AFTER"] as const).map((category) => {
+                      const saved = detail.media?.filter((item) => item.category === category).length || 0;
+                      return (
+                        <label className="b-media-slot" key={category}>
+                          <input
+                            type="file"
+                            accept="image/*,video/mp4,video/webm,video/quicktime"
+                            capture="environment"
+                            disabled={detailBusy}
+                            onChange={(e) => chooseMedia(e, category)}
+                          />
+                          <span>＋</span>
+                          <strong>{category === "PROCESS" ? "Process" : category[0] + category.slice(1).toLowerCase()}</strong>
+                          <small>{detailBusy ? "Mengunggah…" : saved ? `${saved} media tersimpan` : "Tambah media"}</small>
+                        </label>
+                      );
+                    })}
+                  </div>
+                </section>
               </>
             )}
             {detail.status === "CLOSED" && owner && (

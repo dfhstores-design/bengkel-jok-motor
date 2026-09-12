@@ -924,6 +924,65 @@ button:disabled {
 .b-modal article > p strong {
   color: #15221a;
 }
+.b-work-media {
+  margin-top: 17px;
+}
+.b-work-media h3 {
+  margin: 0;
+  font-size: 15px;
+}
+.b-work-media > p {
+  margin: 5px 0 11px;
+  color: #69756e;
+  font-size: 11px;
+}
+.b-media-slots {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+.b-media-slot {
+  min-height: 96px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 1px;
+  padding: 9px 4px;
+  border: 1px dashed #9acdaf;
+  border-radius: 11px;
+  background: #f7fcf8;
+  color: #075d35;
+  text-align: center;
+  cursor: pointer;
+}
+.b-media-slot:focus-within {
+  outline: 3px solid #b9e6c9;
+  outline-offset: 2px;
+}
+.b-media-slot input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+.b-media-slot > span {
+  font-size: 17px;
+  font-weight: 900;
+  line-height: 1;
+}
+.b-media-slot strong {
+  font-size: 11px;
+}
+.b-media-slot small {
+  color: #69756e;
+  font-size: 9px;
+  line-height: 1.2;
+}
+.b-media-slot:has(input:disabled) {
+  cursor: wait;
+  opacity: .72;
+}
 .b-banner {
   margin: 10px 17px;
   padding: 10px;
