@@ -146,8 +146,9 @@ function reportPoints(recap: Recap, history: Job[]): PeriodPoint[] {
   if (span <= 62) {
     const points: PeriodPoint[] = [];
     for (let cursor = new Date(start); cursor <= end; cursor.setDate(cursor.getDate() + 7)) {
-      const last = new Date(cursor);
-      last.setDate(Math.min(end.getDate(), cursor.getDate() + 6));
+      let last = new Date(cursor);
+      last.setDate(cursor.getDate() + 6);
+      if (last > end) last = new Date(end);
       const total = totalFor(cursor, last);
       points.push({
         key: dateKey(cursor),
