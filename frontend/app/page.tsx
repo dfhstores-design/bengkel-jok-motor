@@ -369,6 +369,7 @@ export default function Home() {
     [periodPreset, setPeriodPreset] = useState("month");
   const [auth, setAuth] = useState<Auth | null | undefined>(undefined),
     [users, setUsers] = useState<LoginUser[]>([]),
+    [usersBusy, setUsersBusy] = useState(true),
     [role, setRole] = useState<Mode>("OWNER"),
     [pin, setPin] = useState(""),
     [authBusy, setAuthBusy] = useState(false),
@@ -455,12 +456,28 @@ export default function Home() {
     }
   }
   useEffect(() => {
-    fetch("/api/auth/users", { cache: "no-store" })
-      .then((x) => x.json())
-      .then((r) => {
-        if (r.success) setUsers(r.data || []);
-      })
-      .catch(() => {});
+    let active = true;
+    (async () => {
+      for (let attempt = 0; attempt < 3; attempt += 1) {
+        try {
+          const response = await fetch("/api/auth/users", {
+            cache: "no-store",
+          });
+          const result = await response.json();
+          if (active && response.ok && result.success && result.data?.length) {
+            setUsers(result.data);
+            setUsersBusy(false);
+            return;
+          }
+        } catch {}
+        if (attempt < 2)
+          await new Promise((resolve) => setTimeout(resolve, 900));
+      }
+      if (active) {
+        setUsersBusy(false);
+        setError("Daftar pengguna belum termuat. Silakan muat ulang halaman.");
+      }
+    })();
     fetch("/api/auth/session", { cache: "no-store" })
       .then((x) => x.json())
       .then((r) => {
@@ -470,6 +487,9 @@ export default function Home() {
         } else setAuth(null);
       })
       .catch(() => setAuth(null));
+    return () => {
+      active = false;
+    };
   }, []);
   useEffect(() => {
     if (auth) load();
@@ -839,9 +859,13 @@ export default function Home() {
               </div>
               <button
                 className="b-primary"
-                disabled={authBusy || !loginUser || pin.length < 4}
+                disabled={authBusy || usersBusy || !loginUser || pin.length < 4}
               >
-                {authBusy ? "MEMERIKSA…" : "↪ MASUK"}
+                {authBusy
+                  ? "MEMERIKSA…"
+                  : usersBusy
+                    ? "MEMUAT AKUN…"
+                    : "↪ MASUK"}
               </button>
             </form>
             {error && <p className="error banner">{error}</p>}
