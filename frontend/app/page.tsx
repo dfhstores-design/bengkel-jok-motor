@@ -119,61 +119,22 @@ function reportPoints(recap: Recap, history: Job[]): PeriodPoint[] {
   const start = dateFromKey(recap.date_from);
   const end = dateFromKey(recap.date_to);
   const span = Math.max(1, Math.round((end.getTime() - start.getTime()) / 86400000) + 1);
-  const entries = history.map((job) => ({
-    day: job.closed_at?.slice(0, 10),
-    income: Number(job.payment?.amount || 0),
-  }));
-  const totalFor = (from: Date, to: Date) =>
-    entries.reduce(
-      (total, item) => {
-        if (!item.day) return total;
-        const day = dateFromKey(item.day);
-        if (day < from || day > to) return total;
-        total.income += item.income;
-        total.jobs += 1;
-        return total;
-      },
-      { income: 0, jobs: 0 },
-    );
-  if (span <= 14) {
-    return Array.from({ length: span }, (_, index) => {
-      const day = new Date(start);
-      day.setDate(start.getDate() + index);
-      const total = totalFor(day, day);
-      return { key: dateKey(day), label: `${day.getDate()}/${day.getMonth() + 1}`, ...total };
-    });
-  }
-  if (span <= 62) {
-    const points: PeriodPoint[] = [];
-    for (let cursor = new Date(start); cursor <= end; cursor.setDate(cursor.getDate() + 7)) {
-      let last = new Date(cursor);
-      last.setDate(cursor.getDate() + 6);
-      if (last > end) last = new Date(end);
-      const total = totalFor(cursor, last);
-      points.push({
-        key: dateKey(cursor),
-        label: `${cursor.getDate()}/${cursor.getMonth() + 1}–${last.getDate()}/${last.getMonth() + 1}`,
-        ...total,
-      });
-    }
-    return points;
-  }
-  const months: PeriodPoint[] = [];
-  for (let cursor = new Date(start.getFullYear(), start.getMonth(), 1); cursor <= end; cursor.setMonth(cursor.getMonth() + 1)) {
-    const first = new Date(Math.max(cursor.getTime(), start.getTime()));
-    const last = new Date(Math.min(new Date(cursor.getFullYear(), cursor.getMonth() + 1, 0).getTime(), end.getTime()));
-    const total = totalFor(first, last);
-    if (total.income || total.jobs) {
-      months.push({
-        key: `${cursor.getFullYear()}-${cursor.getMonth()}`,
-        label: new Intl.DateTimeFormat("id-ID", { month: "short", year: "2-digit" }).format(cursor),
-        ...total,
-      });
-    }
-  }
-  return months.length
-    ? months
-    : [{ key: recap.date_from, label: formatPeriodDate(recap.date_from), income: 0, jobs: 0 }];
+  const daily = new Map<string, { income: number; jobs: number }>();
+  history.forEach((job) => {
+    const day = job.closed_at?.slice(0, 10);
+    if (!day) return;
+    const current = daily.get(day) || { income: 0, jobs: 0 };
+    current.income += Number(job.payment?.amount || 0);
+    current.jobs += 1;
+    daily.set(day, current);
+  });
+  return Array.from({ length: span }, (_, index) => {
+    const day = new Date(start);
+    day.setDate(start.getDate() + index);
+    const date = dateKey(day);
+    const total = daily.get(date) || { income: 0, jobs: 0 };
+    return { key: date, label: `${day.getDate()}/${day.getMonth() + 1}`, ...total };
+  });
 }
 const blankJob = {
   motorcycle_model: "",
@@ -231,6 +192,10 @@ function Chart({
   const area = coordinates.length
     ? `${line} L${coordinates[coordinates.length - 1].x} ${top + plotHeight} L${coordinates[0].x} ${top + plotHeight} Z`
     : "";
+  const labelEvery = Math.max(1, Math.ceil(coordinates.length / 7));
+  const labels = coordinates.filter((point, index) =>
+    index === 0 || index === coordinates.length - 1 || index % labelEvery === 0,
+  );
   return (
     <section className="b-card chart-card">
       <div className="b-section-title">
@@ -238,11 +203,11 @@ function Chart({
           <p className="b-eyebrow">RINGKASAN GRAFIK</p>
           <h2>Penjualan sesuai periode laporan</h2>
           <small>
-            {formatPeriodDate(recap.date_from)} – {formatPeriodDate(recap.date_to)} · Pemasukan harian
+            {formatPeriodDate(recap.date_from)} – {formatPeriodDate(recap.date_to)} · Pemasukan per hari
           </small>
         </div>
       </div>
-      <div className="b-line-chart" role="img" aria-label="Grafik pemasukan sesuai periode laporan">
+      <div className="b-line-chart" role="img" aria-label="Grafik pemasukan per hari sesuai periode laporan">
         <svg viewBox={`0 0 ${chartWidth} ${chartHeight}`} preserveAspectRatio="none" aria-hidden="true">
           {[0.2, 0.45, 0.7, 0.95].map((step) => (
             <line key={step} x1={left} x2={chartWidth - right} y1={top + plotHeight * step} y2={top + plotHeight * step} />
@@ -250,11 +215,11 @@ function Chart({
           <path className="b-line-area" d={area} />
           <path className="b-line-path" d={line} />
           {coordinates.map((point) => (
-            <circle key={point.key} cx={point.x} cy={point.y} r="4.5" />
+            <circle key={point.key} cx={point.x} cy={point.y} r="4.5"><title>{`${point.label}: ${money(point.income)}`}</title></circle>
           ))}
         </svg>
         <div className="b-line-labels">
-          {coordinates.map((point) => <small key={point.key} title={`${point.label}: ${money(point.income)}`}>{point.label}</small>)}
+          {labels.map((point) => <small key={point.key} title={`${point.label}: ${money(point.income)}`}>{point.label}</small>)}
         </div>
       </div>
     </section>
