@@ -25,13 +25,19 @@ export async function backendUrl(action: string, params: Record<string, string> 
 }
 
 export async function forwardBackend(url: URL, init?: RequestInit) {
-  try {
-    const response = await fetch(url, { ...init, cache: "no-store" });
-    const payload = await response.json();
-    return NextResponse.json(payload, { status: response.ok ? 200 : response.status });
-  } catch {
-    return fail("Tidak dapat terhubung ke backend Apps Script.");
+  const attempts = (init?.method || "GET").toUpperCase() === "GET" ? 2 : 1;
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
+    try {
+      const response = await fetch(url, { ...init, cache: "no-store" });
+      const text = await response.text();
+      const payload = JSON.parse(text);
+      return NextResponse.json(payload, { status: response.ok ? 200 : response.status });
+    } catch {
+      if (attempt + 1 < attempts)
+        await new Promise((resolve) => setTimeout(resolve, 600));
+    }
   }
+  return fail("Tidak dapat terhubung ke backend Apps Script.");
 }
 
 export function bodyWithSession(body: unknown, token: string) {
