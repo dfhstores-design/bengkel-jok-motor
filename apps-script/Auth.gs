@@ -29,7 +29,8 @@ function authSession_(token, touch) {
   if (!raw) return null;
   var session; try { session = JSON.parse(raw); } catch (ignore) { props.deleteProperty(key); return null; }
   var now = new Date().getTime(), last = new Date(session.last_activity).getTime();
-  if (!last || now - last > 6 * 60 * 60 * 1000) { props.deleteProperty(key); return null; }
+  var idleLimit = session.role === 'OPERATOR' ? 2 * 60 * 60 * 1000 : session.role === 'OWNER' ? 6 * 60 * 60 * 1000 : 0;
+  if (!last || !idleLimit || now - last > idleLimit) { props.deleteProperty(key); return null; }
   if (touch) { session.last_activity = nowIso_(); props.setProperty(key, JSON.stringify(session)); }
   return session;
 }

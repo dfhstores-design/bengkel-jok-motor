@@ -9,7 +9,7 @@ Scope: Personal workshop discipline and business insight. This is intentionally 
 - Owner and Operator login screens follow the approved Motokraf demo.
 - The selected role is never trusted from browser state alone.
 - The server issues the session after validating the submitted role and PIN.
-- Owner and Operator sessions end on logout or after 6 hours without activity.
+- Owner sessions end on logout or after 6 hours without activity. Operator sessions end on logout or after 2 hours without activity.
 - Logout clears the browser session.
 - No commercial tenant, billing, or enterprise identity system is required.
 - PIN hashes and roles are stored in an `AuthUsers` sheet. Plain PINs must never be stored.
@@ -48,7 +48,7 @@ Scope: Personal workshop discipline and business insight. This is intentionally 
 - Valid Owner login succeeds and can read history.
 - Valid Operator login succeeds and can use Operator work flow.
 - Forged role or PIN fails without revealing which credential component was wrong.
-- Owner and Operator sessions end after logout or 6 hours of inactivity.
+- Owner sessions end after logout or 6 hours of inactivity; Operator sessions end after logout or 2 hours of inactivity.
 - Owner can add or deactivate a user; the role dropdown reflects active users.
 - Owner history edit changes only an allowed field and records audit evidence.
 - Operator history edit is rejected.
@@ -57,7 +57,8 @@ Scope: Personal workshop discipline and business insight. This is intentionally 
 
 ## Current implementation boundary
 
-- Staging Apps Script now has additive `AuthUsers` support, SHA-256 PIN verification, UUID session references, six-hour idle expiry, logout invalidation, Owner-only user listing, Owner-only user creation, and server-side session gating for operational actions.
+- The local candidate now applies role-specific idle expiry (Owner: 6 hours; Operator: 2 hours) and rejects unsupported session roles. Staging deployment version 26 has not been updated or revalidated for this timeout change.
+- Staging Apps Script has additive `AuthUsers` support, SHA-256 PIN verification, UUID session references, six-hour idle expiry in the deployed version, logout invalidation, Owner-only user listing, Owner-only user creation, and server-side session gating for operational actions.
 - The staging-only smoke test passed for Owner login, Operator login, invalid PIN rejection, Owner-only authorization, logout invalidation, and no PIN exposure in returned data.
 - Frontend login/session wiring is implemented in the staging candidate. Direct operational Apps Script actions are also gated by `requireAuth_`; production remains unchanged.
 
