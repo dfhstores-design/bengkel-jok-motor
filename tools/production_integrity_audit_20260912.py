@@ -1,7 +1,9 @@
 import concurrent.futures
 import hashlib
 import json
+import time
 import urllib.parse
+import urllib.error
 import urllib.request
 from datetime import date, datetime
 from decimal import Decimal, InvalidOperation
@@ -14,8 +16,16 @@ BACKUP = r"D:\Documents\AI-GPT\Aplikasi Bengkel Jok Motor\backups\BACKUP_PRODUCT
 
 
 def get(path):
-    with urllib.request.urlopen(BASE + path, timeout=30) as response:
-        return json.load(response)
+    error = None
+    for attempt in range(3):
+        try:
+            with urllib.request.urlopen(BASE + path, timeout=45) as response:
+                return json.load(response)
+        except (TimeoutError, urllib.error.URLError, json.JSONDecodeError) as exc:
+            error = exc
+            if attempt < 2:
+                time.sleep(1 + attempt)
+    raise error
 
 
 def detail(job):
@@ -101,7 +111,7 @@ def main():
     expenses = get("/api/expenses")["data"]
     dashboard = get("/api/dashboard")["data"]
     recap = get("/api/recap")["data"]
-    with concurrent.futures.ThreadPoolExecutor(max_workers=8) as pool:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=3) as pool:
         details = list(pool.map(detail, history))
 
     workbook = openpyxl.load_workbook(BACKUP, read_only=True, data_only=True)
