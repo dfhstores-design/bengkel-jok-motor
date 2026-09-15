@@ -463,7 +463,7 @@ export default function Home() {
         try {
           const response = await fetch(path, {
             cache: "no-store",
-            signal: AbortSignal.timeout(25000),
+            signal: AbortSignal.timeout(65000),
           });
           if (response.ok) {
             const result = await response.json();
@@ -589,12 +589,14 @@ export default function Home() {
   }
   useEffect(() => {
     let active = true;
+    // Owner/Operator bawaan tetap dapat dipilih saat Apps Script sedang cold start.
+    setUsersBusy(false);
     (async () => {
       for (let attempt = 0; attempt < 3; attempt += 1) {
         try {
           const response = await fetch("/api/auth/users", {
             cache: "no-store",
-            signal: AbortSignal.timeout(8000),
+            signal: AbortSignal.timeout(30000),
           });
           const result = await response.json();
           if (response.ok && result.success && result.data?.length) {
