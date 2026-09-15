@@ -1,5 +1,6 @@
 "use client";
 import { ChangeEvent, FormEvent, useEffect, useRef, useState } from "react";
+import { buildMonthlyReportExcel, buildMonthlyReportPdf, type MonthlyReport } from "@/lib/monthly-report-export";
 type Mode = "OWNER" | "OPERATOR";
 type View =
   | "home"
@@ -919,70 +920,28 @@ export default function Home() {
   }
   function exportReport(kind: "pdf" | "xls") {
     if (!recap) return;
-    const rows = history.map((j) => [
-      j.closed_at,
-      j.job_id,
-      j.motorcycle_model,
-      j.work_description,
-      j.status,
-      j.payment?.amount || 0,
-      j.agreed_price,
-    ]);
-    const plain = [
-      "LAPORAN BULANAN MOTOKRAF",
-      "Periode: " + recap.date_from + " s/d " + recap.date_to,
-      "",
-      "Pemasukan: " + money(recap.snapshot.total_income),
-      "Pengeluaran: " + money(recap.snapshot.total_expense),
-      "Margin: " + money(recap.snapshot.difference),
-      "Job CLOSED: " + recap.snapshot.closed_job_count,
-      "",
-      ...rows.map((r) => r.join(" | ")),
-    ];
+    const report: MonthlyReport = {
+      dateFrom: recap.date_from,
+      dateTo: recap.date_to,
+      income: recap.snapshot.total_income,
+      expense: recap.snapshot.total_expense,
+      difference: recap.snapshot.difference,
+      closedJobCount: recap.snapshot.closed_job_count,
+      rows: history.map((job) => ({
+        closedAt: job.closed_at,
+        jobId: job.job_id,
+        motorcycleModel: job.motorcycle_model,
+        workDescription: job.work_description,
+        status: job.status,
+        paymentAmount: job.payment?.amount || 0,
+        agreedPrice: job.agreed_price,
+      })),
+    };
     let blob: Blob;
     if (kind === "xls") {
-      const esc = (v: string | number) =>
-        String(v)
-          .replace(/&/g, "&amp;")
-          .replace(/</g, "&lt;")
-          .replace(/>/g, "&gt;");
-      const html = `<html><head><meta charset="utf-8"></head><body><h1>LAPORAN BULANAN MOTOKRAF</h1><p>Periode: ${esc(recap.date_from)} s/d ${esc(recap.date_to)}</p><table border="1"><tr><th>Tanggal</th><th>Job ID</th><th>Model</th><th>Pekerjaan</th><th>Status</th><th>Payment</th><th>Harga deal</th></tr>${rows.map((r) => `<tr>${r.map((v) => `<td>${esc(v)}</td>`).join("")}</tr>`).join("")}</table></body></html>`;
-      blob = new Blob([html], { type: "application/vnd.ms-excel" });
+      blob = new Blob([buildMonthlyReportExcel(report)], { type: "application/vnd.ms-excel" });
     } else {
-      const safe = (v: string) => v.replace(/[()\\]/g, (ch) => `\\${ch}`);
-      const commands = [
-        "BT",
-        "/F1 11 Tf",
-        "50 790 Td",
-        ...plain.flatMap((line, i) => [
-          i ? "0 -16 Td" : "",
-          `(${safe(line)}) Tj`,
-        ]),
-        "ET",
-      ]
-        .filter(Boolean)
-        .join("\\n");
-      const objects = [
-        "<< /Type /Catalog /Pages 2 0 R >>",
-        "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
-        "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>",
-        "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
-        `<< /Length ${commands.length} >>\\nstream\\n${commands}\\nendstream`,
-      ];
-      let pdf = "%PDF-1.4\\n";
-      const offsets = [0];
-      objects.forEach((obj, i) => {
-        offsets.push(pdf.length);
-        pdf += `${i + 1} 0 obj\\n${obj}\\nendobj\\n`;
-      });
-      const xref = pdf.length;
-      pdf += `xref\\n0 ${objects.length + 1}\\n0000000000 65535 f \\n${offsets
-        .slice(1)
-        .map((n) => `${String(n).padStart(10, "0")} 00000 n \\n`)
-        .join(
-          "",
-        )}trailer\\n<< /Size ${objects.length + 1} /Root 1 0 R >>\\nstartxref\\n${xref}\\n%%EOF`;
-      blob = new Blob([pdf], { type: "application/pdf" });
+      blob = new Blob([buildMonthlyReportPdf(report)], { type: "application/pdf" });
     }
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
