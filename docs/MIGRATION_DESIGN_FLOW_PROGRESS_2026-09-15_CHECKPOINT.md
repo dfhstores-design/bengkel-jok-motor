@@ -10,10 +10,10 @@ This checkpoint records each work stage completed after approval of the monthly 
 |---|---|
 | Repository | `D:\Documents\AI-GPT\Aplikasi Bengkel Jok Motor\repo-checkout` |
 | Branch | `codex/operator-idle-timeout-2026-09-15` |
-| HEAD | `ea1a940` — `Update candidate lineage for reliability fixes` |
+| Source HEAD captured in the first checkpoint copy | `ea1a940` — `Update candidate lineage for reliability fixes`; checkpoint copy was committed as `a79ae47` |
 | Deployed candidate code commit | `8f0c529` — `Retry idempotent staging mutations` |
 | Latest Vercel Preview | `https://aplikasi-bengkel-staging-20260912-iadi01rsv-dfhstores-projects.vercel.app` — deployment `dpl_H9hwFwN5CgxkV4WxorhV1gmTq2rk`, READY |
-| Staging Apps Script | Version 28 — `Payment-date report periods staging 2026-09-15` |
+| Staging Apps Script | Version 28 — `Payment-date report periods staging 2026-09-15`; the latest Preview is paired to v28 |
 | Existing local changes preserved | `.gitignore`, `frontend/.gitignore`, prior progress checkpoint, and three user screenshots remain uncommitted and unmodified by this work. |
 
 ## Work stages
@@ -60,6 +60,12 @@ This checkpoint records each work stage completed after approval of the monthly 
 - Added a runbook for a fresh timestamped backup, SHA-256, tab/header/count/ID/relation checks, promotion gates, read-only smoke, and rollback to the prior READY Vercel deployment.
 - No new production backup was created because there is no authorized production rollout in progress. A fresh backup remains mandatory immediately before any separately approved production deployment.
 - Rollback action is documented as re-pointing the production alias to a pre-recorded READY Vercel deployment; it must not overwrite Sheet data.
+
+### Stage 7 — Documentation alignment
+
+- Corrected the gap register and this checkpoint to identify Apps Script staging version 28, the READY Preview deployment `dpl_H9hwFwN5CgxkV4WxorhV1gmTq2rk`, and the code commit that deployment contains (`8f0c529`).
+- Preserved the distinction between the deployed code commit, documentation commits, and the earlier approved/skip decisions.
+- Re-read the checkpoint from Drive after updating it; the Drive copy is being replaced in place so the existing checkpoint link remains stable.
 
 ## Verification summary
 

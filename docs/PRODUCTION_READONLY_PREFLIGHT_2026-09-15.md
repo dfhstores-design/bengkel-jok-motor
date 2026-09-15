@@ -41,7 +41,7 @@ The extra IDs are legitimate operational changes after the 11 September backup; 
 |---|---|---|
 | Safe retry for idempotent mutation POST | PASS IMPLEMENTATION / STAGING READY | The Vercel relay now retries once only when the request body contains an idempotency key. Job, Payment/Close Job, Expense, media, receipt, and history-edit writes already use server-side idempotency. PIN changes and other non-idempotent POSTs remain single-attempt. |
 | POST retry regression | PASS LOCAL | Test proves a transient 503 is retried for an idempotent POST and never retried for a non-idempotent POST. |
-| Apps Script staging | PASS | Version 28, `Payment-date report periods staging 2026-09-15`, is paired with the latest preview environment. |
+| Apps Script staging | PASS | Version 28, `Payment-date report periods staging 2026-09-15`, is paired with latest READY Preview `dpl_H9hwFwN5CgxkV4WxorhV1gmTq2rk`. |
 | Period source consistency | PASS LOCAL / STAGING READY | Summary income, report history, and closed-job period filtering now use linked Payment date. Expenses retain expense date. Preset `Semua data` now starts at 1900-01-01 rather than 2020-01-01. |
 | Period regression | PASS LOCAL | Tests cover payment date different from Job closed date and an unpaid CLOSED Job inconsistency. |
 
