@@ -1,6 +1,6 @@
 # Motokraf migration checkpoint — 2026-09-15
 
-Status: **STAGING CANDIDATE IMPROVED — PRODUCTION GATES PARTIAL / NO PRODUCTION CHANGE**
+Status: **STAGING CANDIDATE IMPROVED — PRODUCTION DEPLOYMENT NOT APPROVED; READ-ONLY BACKUP COPY CREATED**
 
 This checkpoint records each work stage completed after approval of the monthly PDF and Excel output. It separates refreshed evidence from historical baseline evidence and preserves the remaining production gates.
 
@@ -58,7 +58,7 @@ This checkpoint records each work stage completed after approval of the monthly 
 ### Stage 6 — Backup and rollback preparation
 
 - Added a runbook for a fresh timestamped backup, SHA-256, tab/header/count/ID/relation checks, promotion gates, read-only smoke, and rollback to the prior READY Vercel deployment.
-- No new production backup was created because there is no authorized production rollout in progress. A fresh backup remains mandatory immediately before any separately approved production deployment.
+- A current read-only production backup was made after the user explicitly requested it: Drive copy and local XLSX export are recorded in Stage 8. This backup does not authorize or perform deployment. Repeat the backup immediately before a separately approved production deployment if the dataset changes in the meantime.
 - Rollback action is documented as re-pointing the production alias to a pre-recorded READY Vercel deployment; it must not overwrite Sheet data.
 
 ### Stage 7 — Documentation alignment
@@ -66,6 +66,14 @@ This checkpoint records each work stage completed after approval of the monthly 
 - Corrected the gap register and this checkpoint to identify Apps Script staging version 28, the READY Preview deployment `dpl_H9hwFwN5CgxkV4WxorhV1gmTq2rk`, and the code commit that deployment contains (`8f0c529`).
 - Preserved the distinction between the deployed code commit, documentation commits, and the earlier approved/skip decisions.
 - Re-read the checkpoint from Drive after updating it; the Drive copy is being replaced in place so the existing checkpoint link remains stable.
+
+### Stage 8 — Current production backup and validation
+
+- Source verified read-only as native spreadsheet `MVP Data Store - v1` in the production data folder, with tabs Jobs, Payments, Expenses, and Media; workbook locale/timezone en_US / Asia/Jakarta.
+- Created a full Drive copy `BACKUP_PRODUCTION_MVP_DATA_STORE_20260915_2241_WIB` in the same folder as the source. The local XLSX export is also stored in the checkpoint Drive folder [here](https://docs.google.com/spreadsheets/d/1ZgHPkTnu7oQuAY8H3U37PjmbqA3hLnG9/edit?usp=drivesdk). No source-sheet cells, schema, permissions, or operational records were changed.
+- Exported the copy to a readable local XLSX at `D:\\Documents\\AI-GPT\\Aplikasi Bengkel Jok Motor\\backups\\BACKUP_PRODUCTION_MVP_DATA_STORE_20260915_2241_WIB.xlsx`; size 15,831 bytes; SHA-256 `49E4DEE7DBD3C144527EDC6D4BE639DCA842472DF99FB69DF9529A05B5587813`.
+- Re-read all 4 native tabs from both production source and Drive copy: values matched exactly. Local XLSX read-back found Jobs 39 (39 unique IDs), Payments 39 (39 unique IDs), Expenses 26 (26 unique IDs), Media 0; duplicate IDs 0 in each tab. Payment-to-Job orphan references: 0; Media rows/orphan references: 0. Headers and aggregates are recorded in `PRODUCTION_BACKUP_VALIDATION_2026-09-15.md`.
+- Source read and complete-copy comparison occurred around 2026-09-15 22:41 WIB. Any operational writes after that point will not be part of this snapshot; repeat backup immediately before an approved rollout if required.
 
 ## Verification summary
 
@@ -76,6 +84,7 @@ This checkpoint records each work stage completed after approval of the monthly 
 - Apps Script source syntax check: **PASS** before staging version 28 deploy.
 - Vercel candidate preview: **READY**.
 - Production audit: read-only refreshed baseline **PASS WITH LIMITATION**; legacy endpoint exhibited a detail GET timeout on the first attempt, and the audit completed after retry/concurrency hardening.
+- Production backup copy/export: **PASS** (read-back and exact native source-copy values match).
 - Production deployment, production write probe, schema change, cleanup, and operational data mutation: **NOT PERFORMED**.
 
 ## Remaining gaps before any production approval
@@ -91,9 +100,10 @@ This checkpoint records each work stage completed after approval of the monthly 
 - [Gap register](MIGRATION_DESIGN_FLOW_GAP_REGISTER_2026-09-15.md)
 - [Staging validation](MIGRATION_DESIGN_FLOW_STAGING_VALIDATION_2026-09-15.md)
 - [Production read-only preflight](PRODUCTION_READONLY_PREFLIGHT_2026-09-15.md)
-- [Production backup and rollback runbook](PRODUCTION_RELEASE_BACKUP_ROLLBACK_RUNBOOK.md)
+- [Production backup validation](https://drive.google.com/file/d/1pHYe7UQ_f_eLpGw7_-CI95_Qm8Sg4P5k/view)
+- [Production backup and rollback runbook](https://drive.google.com/file/d/1y4y6TNYKvcYUFNW5xK8NNV067o_zwNuu/view)
 - Read-only integrity output: `D:\Documents\AI-GPT\Aplikasi Bengkel Jok Motor\qa-evidence\production-integrity-readonly-retry-20260915.json`
 
 ## Safety statement
 
-Production Vercel deployment, Apps Script, Sheet, Drive media, schema, operational rows, IDs, timestamps, statuses, Payment values, and relationships were not changed. No production write or cleanup endpoint was called. Existing local uncommitted user changes remain preserved.
+Production application, Apps Script, source Sheet contents, schema, operational rows, IDs, timestamps, statuses, Payment values, and relationships were not changed. A separate read-only backup copy was created as requested. No production API write or cleanup endpoint was called. Existing local uncommitted user changes remain preserved.

@@ -2,7 +2,7 @@
 
 Status: **PARTIAL PASS — PRODUCTION DEPLOYMENT REMAINS UNAUTHORIZED**
 
-All checks in this report used production GET/read-only access only. No production deployment, write request, schema change, cleanup request, or operational-data edit was performed.
+Application and data checks used production GET/read-only access. A separate full spreadsheet backup copy was created as requested; no production deployment, API write request, schema change, cleanup request, or source operational-data edit was performed.
 
 ## Production identity and rollback lineage
 
@@ -14,11 +14,9 @@ All checks in this report used production GET/read-only access only. No producti
 | Current production Apps Script version, Sheet identity, and Drive media identity | BLOCKED | Historical evidence exists, but no current authenticated Apps Script production configuration was available in this checkout for a fresh identity verification. No guess was made. |
 | Production public-read exposure | OPEN RISK | The read-only audit reached the legacy production API without an authenticated production session. The staged candidate has server-side session gating; production remains unchanged. |
 
-## Historical backup read-back
+## Current backup read-back
 
-The retained `BACKUP_PRODUCTION_MVP_DATA_STORE_2026-09-11_2355.xlsx` file remains readable. Its SHA-256 still matches the recorded historical value. Read-back found Jobs 28 rows, Payments 28, Expenses 14, and Media 0.
-
-This is **not** a release-time backup. It is retained only as a historical comparison point. A new timestamped backup/export, hash, tab/header check, unique-ID check, relationship check, and read-back are mandatory immediately before any production rollout.
+A new full Drive copy `BACKUP_PRODUCTION_MVP_DATA_STORE_20260915_2241_WIB` and local XLSX export were created after the user requested a backup. The local export is readable (15,831 bytes; SHA-256 `49E4DEE7DBD3C144527EDC6D4BE639DCA842472DF99FB69DF9529A05B5587813`). Native source and copy values matched exactly across all four tabs. Local read-back: Jobs 39 rows / 39 unique IDs; Payments 39 / 39; Expenses 26 / 26; Media 0; duplicate IDs 0; Payment-to-Job orphan references 0. Detailed evidence is in `PRODUCTION_BACKUP_VALIDATION_2026-09-15.md`. This snapshot is current as of 2026-09-15 22:41 WIB; repeat immediately before rollout if production data has changed.
 
 ## Refreshed integrity comparison
 
@@ -48,7 +46,7 @@ The extra IDs are legitimate operational changes after the 11 September backup; 
 ## Remaining release gates
 
 1. Fresh authenticated production Apps Script, Sheet, and Drive identity/permission verification.
-2. New timestamped production backup and read-back immediately before release.
+2. Refresh timestamped production backup and read-back immediately before release if the dataset has changed since the 2026-09-15 22:41 WIB snapshot.
 3. Controlled staging POST recovery evidence for the retry path, using an existing idempotency-safe synthetic marker and without deleting existing data.
 4. Fresh authenticated staging verification across all period presets, custom range, table/card/chart/report consistency, and browser download events.
 5. Production deployment approval after the items above are complete.

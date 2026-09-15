@@ -2,7 +2,7 @@
 
 Status: **STAGING CANDIDATE DEPLOYED — NOT READY FOR PRODUCTION APPROVAL**
 
-This register refreshes the 2026-09-15 checkpoint against the current checkout and reachable services. Historical test and deployment evidence is identified separately from evidence refreshed in this session. No production resource or operational data was changed.
+This register refreshes the 2026-09-15 checkpoint against the current checkout and reachable services. Historical test and deployment evidence is identified separately from evidence refreshed in this session. No production application/API/schema/operational data was changed; a separate backup copy was created on request.
 
 ## Current candidate
 
@@ -25,7 +25,7 @@ This register refreshes the 2026-09-15 checkpoint against the current checkout a
 - The staging Vercel project binding identifies `aplikasi-bengkel-staging-20260912` (`prj_P10Kd25TvSOv9OIFBOPVYRwx0zRo`). The latest READY Preview is paired to the isolated Apps Script staging version 28. The Preview-only backend URL was replaced; no production environment variable was changed.
 - The checkpoint staging alias still identifies itself as Sprint 5. The candidate review URL above is the only URL that proves the current staging deployment; HTTP 200 alone remains insufficient evidence.
 - The staging Apps Script project ID and version 28 deployment were verified through its isolated `clasp` configuration. Production Apps Script/Sheet/Drive identity, permissions, and resource mapping remain unverified.
-- The latest production backup, checksum/read-back, row/ID/relationship baseline, and rollback lineage remain **historical evidence only** from 2026-09-11/12. They are not a current pre-migration backup.
+- A current production backup was created on 2026-09-15 at 22:41 WIB: Drive copy and local XLSX export are readable; all tabs match the source values; unique-ID and Payment-to-Job checks passed. See the backup validation report. This snapshot is not proof of future-state data and may need to be repeated immediately before release.
 - Fresh candidate evidence: the current preview reaches the login screen with the approved dropdown/keypad flow; the active-user lookup returned HTTP 200 in 3.35 seconds after deployment. The earlier three-sample preview read measurement was 2.72–3.03 seconds. These read-only samples do not prove POST reliability. The PDF generator repair is covered by QPDF structural validation and the generated PDF/Excel both assert the required monthly values.
 
 ## Product Foundation check
@@ -39,7 +39,7 @@ Product Foundation documents 00–10 and 09A were reviewed from the local DOCX s
 | Critical | Candidate deployment/backend pairing. | Current preview `dpl_H9hwFwN5CgxkV4WxorhV1gmTq2rk` is READY and Preview-only `APPS_SCRIPT_API_URL` points to isolated Apps Script version 28. Do not promote it. | CLOSED FOR STAGING |
 | Critical | Operator two-hour expiry. | Apps Script version 28 contains role-specific session expiry. Local boundary tests pass; controlled two-hour expiry has not been waited out in staging. | SKIP — APPROVED BY USER |
 | Critical | Current production Apps Script deployment/version, Sheet identity, media Drive mapping, and permissions remain unverified. The Vercel production alias/deployment is now refreshed read-only. No write probe was made. | Complete authenticated read-only Apps Script identity and access review through approved tooling. | OPEN |
-| Critical | Current timestamped production backup/export is unavailable. The 2026-09-11 backup was read back and its historical integrity comparison refreshed, but live data has since gained 8 Jobs/Payments and 9 Expenses. | Immediately before any approved production migration, create a new timestamped backup under the runbook; verify readability, expected tabs, hashes, unique IDs, counts, and relations. | OPEN — PRODUCTION GATE |
+| Critical | The current timestamped backup/export is verified as of 2026-09-15 22:41 WIB; the data may change before a rollout. | If data changes before any approved production migration, create another timestamped backup under the runbook. Repeat source identity, readability, tabs, unique-ID, count, and relation checks. | PASS — REFRESH AGAIN IF STALE |
 | High | Owner/Operator login/logout/session refresh and response secrecy. | Browser login via active-user dropdown and keypad passed for both roles; logout returned to login state. Login JSON did not expose PIN or session token; cookies carry 6h Owner / 2h Operator. Server execution smoke tooling returned `NOT_FOUND`, controlled expiry and PIN-change role denial remain unproven. | PARTIAL |
 | High | Job/Payment/Close Job/media/Expense/history edit/audit and duplicate-submit checks are not freshly tied to the current candidate code commit. Prior operational flow was approved by the user; full evidence for this exact candidate is incomplete. | Capture the complete Owner/Operator staging interaction matrix and verify immutable IDs/status/payment/relations and audit trail, without deleting existing staging synthetic rows. | OPEN |
 | High | All period filters, chart-per-day values, tables/cards/reports consistency, and 390×844 layout are not freshly validated on this candidate. | Payment-date period alignment and `Semua data` coverage now have local regression tests. Repeat all authenticated candidate-preview checks, capture fresh screenshots/download checks, and verify no horizontal overflow. | OPEN |
@@ -54,4 +54,4 @@ The candidate is now reviewable on a verified isolated staging pair. Staging and
 
 ## Production safety
 
-No production deployment, Apps Script, Sheet, Drive media, schema, operational record, or production URL configuration was changed in this session. No production write or cleanup endpoint was called. No staging test data was added or removed in this session.
+A separate production backup copy/export was created as requested. No production deployment, Apps Script, source Sheet contents, Drive media contents, schema, operational record, or production URL configuration was changed. No production API write or cleanup endpoint was called. No staging test data was added or removed in this session.

@@ -38,6 +38,6 @@ Rollback is required if the deployed frontend cannot read data correctly, sessio
 4. Use the new timestamped backup only for comparison or a separately approved data recovery procedure.
 5. Re-run read-only smoke and the integrity audit after rollback, then record the outcome.
 
-## Current limitation
+## Current snapshot
 
-The 2026-09-11 backup is readable and has a verified historical hash, but it is not a release-time backup. A fresh backup remains a hard gate for any production deployment.
+A verified production copy/export was created at 2026-09-15 22:41 WIB; see `PRODUCTION_BACKUP_VALIDATION_2026-09-15.md`. It is a point-in-time snapshot, not approval to deploy. Immediately before any separately approved production deployment, refresh the backup if operational data has changed and reverify source identity, counts, IDs, relations, checksum, and rollback lineage.
