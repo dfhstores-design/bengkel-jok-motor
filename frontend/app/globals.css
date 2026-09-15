@@ -1787,7 +1787,7 @@ button:disabled {
 .b-line-chart .b-line-path {
   fill: none;
   stroke: #078b4a;
-  stroke-width: 3.5;
+  stroke-width: 2;
   stroke-linecap: round;
   stroke-linejoin: round;
 }

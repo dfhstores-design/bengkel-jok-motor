@@ -423,6 +423,10 @@ export default function Home() {
     [role, setRole] = useState<Mode>("OWNER"),
     [pin, setPin] = useState(""),
     [authBusy, setAuthBusy] = useState(false),
+    [settingsUserId, setSettingsUserId] = useState("owner-demo"),
+    [settingsPin, setSettingsPin] = useState(""),
+    [settingsPinConfirm, setSettingsPinConfirm] = useState(""),
+    [settingsBusy, setSettingsBusy] = useState(false),
     [view, setView] = useState<View>("home"),
     [activeJobs, setActiveJobs] = useState<Job[]>([]),
     [recap, setRecap] = useState<Recap | null>(null),
@@ -451,6 +455,12 @@ export default function Home() {
     (role === "OWNER"
       ? { user_id: "owner-demo", display_name: "Owner Demo", role }
       : { user_id: "operator-demo", display_name: "Operator Demo", role });
+  const manageableUsers = users.length
+    ? users
+    : [
+        { user_id: "owner-demo", display_name: "Owner Demo", role: "OWNER" as Mode },
+        { user_id: "operator-demo", display_name: "Operator Demo", role: "OPERATOR" as Mode },
+      ];
   const notify = (e = "", m = "") => {
     setError(e);
     setMessage(m);
@@ -615,7 +625,7 @@ export default function Home() {
     })();
     fetch("/api/auth/session", {
       cache: "no-store",
-      signal: AbortSignal.timeout(8000),
+      signal: AbortSignal.timeout(2500),
     })
       .then(async (x) => (x.ok ? x.json() : { success: false }))
       .then((r) => {
@@ -670,15 +680,44 @@ export default function Home() {
       setAuthBusy(false);
     }
   }
-  async function logout() {
-    setAuthBusy(true);
+  function logout() {
+    setAuth(null);
+    setView("home");
+    setPin("");
+    notify();
+    void fetch("/api/auth/logout", { method: "POST", keepalive: true }).catch(() => {});
+  }
+  async function updatePin(e: FormEvent) {
+    e.preventDefault();
+    if (settingsBusy) return;
+    if (!/^\d{4,8}$/.test(settingsPin)) {
+      notify("PIN baru harus berisi 4–8 angka.");
+      return;
+    }
+    if (settingsPin !== settingsPinConfirm) {
+      notify("Konfirmasi PIN belum sama.");
+      return;
+    }
+    setSettingsBusy(true);
+    notify();
     try {
-      await fetch("/api/auth/logout", { method: "POST" });
+      const response = await fetch("/api/auth/pin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ user_id: settingsUserId, pin: settingsPin }),
+      });
+      const result = await response.json();
+      if (!response.ok || !result.success) {
+        notify(result.message || "PIN gagal diperbarui.");
+        return;
+      }
+      setSettingsPin("");
+      setSettingsPinConfirm("");
+      notify("", "PIN berhasil diperbarui. PIN lama tidak disimpan di aplikasi.");
+    } catch {
+      notify("PIN gagal terhubung ke backend. Coba lagi.");
     } finally {
-      setAuth(null);
-      setView("home");
-      setPin("");
-      setAuthBusy(false);
+      setSettingsBusy(false);
     }
   }
   function press(n: string) {
@@ -1425,10 +1464,55 @@ export default function Home() {
               Pengelolaan PIN dilakukan oleh Owner. Perubahan PIN akan disimpan
               sebagai hash di backend.
             </p>
-            <p className="empty">
-              Form perubahan PIN akan diaktifkan setelah endpoint pengelolaan
-              user selesai diverifikasi.
-            </p>
+            <form onSubmit={updatePin}>
+              <label>
+                Pengguna
+                <select
+                  value={settingsUserId}
+                  onChange={(e) => setSettingsUserId(e.target.value)}
+                >
+                  {manageableUsers.map((user) => (
+                    <option key={user.user_id} value={user.user_id}>
+                      {user.display_name} · {user.role}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                PIN baru
+                <input
+                  required
+                  inputMode="numeric"
+                  pattern="[0-9]{4,8}"
+                  minLength={4}
+                  maxLength={8}
+                  type="password"
+                  value={settingsPin}
+                  onChange={(e) => setSettingsPin(e.target.value.replace(/\D/g, ""))}
+                  placeholder="4–8 angka"
+                />
+              </label>
+              <label>
+                Konfirmasi PIN baru
+                <input
+                  required
+                  inputMode="numeric"
+                  pattern="[0-9]{4,8}"
+                  minLength={4}
+                  maxLength={8}
+                  type="password"
+                  value={settingsPinConfirm}
+                  onChange={(e) => setSettingsPinConfirm(e.target.value.replace(/\D/g, ""))}
+                  placeholder="Ulangi PIN baru"
+                />
+              </label>
+              <small className="b-pin-help">
+                PIN lama dan hash tidak pernah ditampilkan. Perubahan berlaku untuk login berikutnya.
+              </small>
+              <button className="b-primary" disabled={settingsBusy}>
+                {settingsBusy ? "Menyimpan PIN…" : "Simpan PIN baru"}
+              </button>
+            </form>
           </section>
         )}{" "}
         {view === "expense" && owner && (

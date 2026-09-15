@@ -10,9 +10,17 @@ function sha256Hex_(value) {
 }
 
 function authRows_() {
+  var cache = CacheService.getScriptCache(), cached = cache.get('AUTH_USERS_V1');
+  if (cached) { try { return JSON.parse(cached); } catch (ignore) {} }
   var sheet = authUsersSheet_(), headers = headers_(sheet), lastRow = sheet.getLastRow();
   if (lastRow < 2) return [];
-  return sheet.getRange(2, 1, lastRow - 1, headers.length).getValues().map(function(row) { return recordFromRow_(headers, row); });
+  var rows = sheet.getRange(2, 1, lastRow - 1, headers.length).getValues().map(function(row) { return recordFromRow_(headers, row); });
+  cache.put('AUTH_USERS_V1', JSON.stringify(rows), 300);
+  return rows;
+}
+
+function clearAuthRowsCache_() {
+  CacheService.getScriptCache().remove('AUTH_USERS_V1');
 }
 
 function authSession_(token, touch) {
@@ -77,8 +85,26 @@ function createAuthUser_(e) {
   var userId = text_(body.user_id), displayName = text_(body.display_name), role = text_(body.role), pin = text_(body.pin);
   if (!userId || !displayName || !pin || ['OWNER', 'OPERATOR'].indexOf(role) < 0) return fail_('AUTH_USER_INPUT_INVALID');
   if (authRows_().some(function(row) { return text_(row.user_id) === userId; })) return fail_('AUTH_USER_EXISTS');
-  var now = nowIso_(); authUsersSheet_().appendRow([userId, displayName, role, sha256Hex_(pin), true, now, now]);
+  var now = nowIso_(); authUsersSheet_().appendRow([userId, displayName, role, sha256Hex_(pin), true, now, now]); clearAuthRowsCache_();
   return ok_({ user_id: userId, display_name: displayName, role: role, active: true }, 'User berhasil ditambahkan.');
+}
+
+function updateAuthUserPin_(e) {
+  var body = parseBody_(e), session = requireAuth_(e, body, 'OWNER');
+  var userId = text_(body.user_id), pin = text_(body.pin);
+  if (!userId || !/^\d{4,8}$/.test(pin)) return fail_('AUTH_PIN_INPUT_INVALID');
+  var sheet = authUsersSheet_(), headers = headers_(sheet), lastRow = sheet.getLastRow(), rowNumber = 0;
+  for (var row = 2; row <= lastRow; row += 1) {
+    if (text_(sheet.getRange(row, 1).getValue()) === userId) { rowNumber = row; break; }
+  }
+  if (!rowNumber) return fail_('AUTH_USER_NOT_FOUND');
+  var hashColumn = headers.indexOf('pin_hash') + 1, updatedColumn = headers.indexOf('updated_at') + 1;
+  if (!hashColumn || !updatedColumn) return fail_('AUTH_USERS_SCHEMA_INVALID');
+  sheet.getRange(rowNumber, hashColumn).setValue(sha256Hex_(pin));
+  sheet.getRange(rowNumber, updatedColumn).setValue(nowIso_());
+  clearAuthRowsCache_();
+  logEvent_('updateAuthUserPin', userId, 'SUCCESS', session.user_id);
+  return ok_({ user_id: userId }, 'PIN berhasil diperbarui.');
 }
 
 function auditLogSheet_() {

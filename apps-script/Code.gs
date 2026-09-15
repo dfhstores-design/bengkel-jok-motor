@@ -212,7 +212,7 @@ function doPost(e) {
 function handleRequest_(e) {
   const action = e && e.parameter ? e.parameter.action : null;
   try {
-    var protectedActions = ['healthCheck', 'createJob', 'listActiveJobs', 'listClosedJobs', 'getDashboard', 'getRecap', 'getOwnerReport', 'getJob', 'closeJob', 'addJobMedia', 'listJobMedia', 'createExpense', 'listExpenses', 'addExpenseReceipt', 'listExpenseMedia', 'editClosedJob'];
+    var protectedActions = ['healthCheck', 'createJob', 'listActiveJobs', 'listClosedJobs', 'getDashboard', 'getRecap', 'getOwnerReport', 'getJob', 'closeJob', 'addJobMedia', 'listJobMedia', 'createExpense', 'listExpenses', 'addExpenseReceipt', 'listExpenseMedia', 'editClosedJob', 'updateAuthUserPin'];
     var requestBody = null;
     if (e && e.postData && e.postData.contents) { try { requestBody = parseBody_(e); } catch (ignore) {} }
     if (protectedActions.indexOf(action) >= 0) requireAuth_(e, requestBody, null);
@@ -222,6 +222,7 @@ function handleRequest_(e) {
     if (action === 'listAuthUsers') return jsonOutput_(listAuthUsers_(e));
     if (action === 'listLoginUsers') return jsonOutput_(listLoginUsers_());
     if (action === 'createAuthUser') return jsonOutput_(createAuthUser_(e));
+    if (action === 'updateAuthUserPin') return jsonOutput_(updateAuthUserPin_(e));
     if (action === 'editClosedJob') return jsonOutput_(editClosedJob_(e));
     if (action === 'healthCheck') return jsonOutput_(healthCheck_());
 
