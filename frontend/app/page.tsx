@@ -420,6 +420,7 @@ export default function Home() {
   const [auth, setAuth] = useState<Auth | null | undefined>(undefined),
     [users, setUsers] = useState<LoginUser[]>([]),
     [usersBusy, setUsersBusy] = useState(true),
+    [loginUserId, setLoginUserId] = useState("owner-demo"),
     [role, setRole] = useState<Mode>("OWNER"),
     [pin, setPin] = useState(""),
     [authBusy, setAuthBusy] = useState(false),
@@ -450,17 +451,14 @@ export default function Home() {
   const createJobRequest = useRef(false);
   const createJobKey = useRef<string | null>(null);
   const owner = auth?.role === "OWNER";
-  const loginUser =
-    users.find((u) => u.role === role) ||
-    (role === "OWNER"
-      ? { user_id: "owner-demo", display_name: "Owner Demo", role }
-      : { user_id: "operator-demo", display_name: "Operator Demo", role });
   const manageableUsers = users.length
     ? users
     : [
         { user_id: "owner-demo", display_name: "Owner Demo", role: "OWNER" as Mode },
         { user_id: "operator-demo", display_name: "Operator Demo", role: "OPERATOR" as Mode },
       ];
+  const loginUser =
+    manageableUsers.find((user) => user.user_id === loginUserId) || manageableUsers[0];
   const notify = (e = "", m = "") => {
     setError(e);
     setMessage(m);
@@ -611,6 +609,11 @@ export default function Home() {
           const result = await response.json();
           if (response.ok && result.success && result.data?.length) {
             setUsers(result.data);
+            setLoginUserId((current) =>
+              result.data.some((user: LoginUser) => user.user_id === current)
+                ? current
+                : result.data[0].user_id,
+            );
             setUsersBusy(false);
             return;
           }
@@ -1009,21 +1012,28 @@ export default function Home() {
           <section className="b-login-card">
             <img src="/motokraf-site-ico.webp" alt="Motokraf" />
             <h2>Masuk ke Sistem</h2>
-            <p>Pilih peran dan masukkan PIN</p>
-            <div className="b-role">
-              <button
-                className={role === "OWNER" ? "selected" : ""}
-                onClick={() => setRole("OWNER")}
+            <p>Pilih pengguna dan masukkan PIN</p>
+            <label className="b-login-user">
+              <span>Pengguna aktif</span>
+              <select
+                aria-label="Pilih pengguna"
+                value={loginUser.user_id}
+                disabled={usersBusy}
+                onChange={(event) => {
+                  const selected = manageableUsers.find((user) => user.user_id === event.target.value);
+                  if (selected) {
+                    setLoginUserId(selected.user_id);
+                    setRole(selected.role);
+                  }
+                }}
               >
-                OWNER
-              </button>
-              <button
-                className={role === "OPERATOR" ? "selected" : ""}
-                onClick={() => setRole("OPERATOR")}
-              >
-                OPERATOR
-              </button>
-            </div>
+                {manageableUsers.map((user) => (
+                  <option key={user.user_id} value={user.user_id}>
+                    {user.display_name} · {user.role === "OWNER" ? "Owner" : "Operator"}
+                  </option>
+                ))}
+              </select>
+            </label>
             <div className="b-pin">
               {pin ? "• ".repeat(pin.length) : "• • • •"}
             </div>

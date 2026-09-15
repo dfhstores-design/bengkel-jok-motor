@@ -820,6 +820,23 @@ button:disabled {
   background: #075d35;
   color: #fff;
 }
+.b-login-user {
+  display: grid;
+  gap: 5px;
+  margin-bottom: 12px;
+  color: #426050;
+  font-size: 12px;
+  font-weight: 800;
+  text-align: left;
+}
+.b-login-user select {
+  min-height: 44px;
+  border: 1px solid #cfe1d4;
+  border-radius: 9px;
+  background: #fff;
+  color: #075d35;
+  font-weight: 800;
+}
 .b-pin {
   height: 51px;
   background: #fff;
