@@ -53,6 +53,12 @@ type Expense = {
   supplier: string;
   notes: string;
 };
+type JobInputSuggestions = {
+  motorcycleModels: string[];
+  workTypes: string[];
+  customerNames: string[];
+  customerWhatsapps: string[];
+};
 type Recap = {
   date_from: string;
   date_to: string;
@@ -147,6 +153,34 @@ const blankExp = {
   supplier: "",
   notes: "",
 };
+const blankJobInputSuggestions = (): JobInputSuggestions => ({
+  motorcycleModels: [],
+  workTypes: [],
+  customerNames: [],
+  customerWhatsapps: [],
+});
+const jobInputHistoryKey = (userId: string) => `motokraf-job-input-history:${userId}`;
+const recentInputValues = (values: unknown, newest = "") => {
+  const prior = Array.isArray(values) ? values : [];
+  return Array.from(
+    new Set([newest, ...prior].map((value) => String(value || "").trim()).filter(Boolean)),
+  ).slice(0, 12);
+};
+const savedJobInputSuggestions = (value: unknown): JobInputSuggestions => {
+  const record = value && typeof value === "object" ? value as Record<string, unknown> : {};
+  return {
+    motorcycleModels: recentInputValues(record.motorcycleModels),
+    workTypes: recentInputValues(record.workTypes),
+    customerNames: recentInputValues(record.customerNames),
+    customerWhatsapps: recentInputValues(record.customerWhatsapps),
+  };
+};
+const rememberJobInput = (prior: JobInputSuggestions, input: typeof blankJob) => ({
+  motorcycleModels: recentInputValues(prior.motorcycleModels, input.motorcycle_model),
+  workTypes: recentInputValues(prior.workTypes, input.work_type),
+  customerNames: recentInputValues(prior.customerNames, input.customer_name),
+  customerWhatsapps: recentInputValues(prior.customerWhatsapps, input.customer_whatsapp),
+});
 function Chart({
   recap,
   history,
@@ -435,6 +469,7 @@ export default function Home() {
     [history, setHistory] = useState<Job[]>([]),
     [expenses, setExpenses] = useState<Expense[]>([]),
     [job, setJob] = useState(blankJob),
+    [jobInputSuggestions, setJobInputSuggestions] = useState<JobInputSuggestions>(blankJobInputSuggestions),
     [exp, setExp] = useState(blankExp),
     [detail, setDetail] = useState<Job | null>(null),
     [busy, setBusy] = useState(false),
@@ -645,6 +680,21 @@ export default function Home() {
     };
   }, []);
   useEffect(() => {
+    if (!auth) {
+      setJobInputSuggestions(blankJobInputSuggestions());
+      return;
+    }
+    try {
+      setJobInputSuggestions(
+        savedJobInputSuggestions(
+          JSON.parse(window.localStorage.getItem(jobInputHistoryKey(auth.user_id)) || "{}"),
+        ),
+      );
+    } catch {
+      setJobInputSuggestions(blankJobInputSuggestions());
+    }
+  }, [auth?.user_id]);
+  useEffect(() => {
     if (auth) load();
   }, [auth, view]);
   async function login(e: FormEvent) {
@@ -756,6 +806,16 @@ export default function Home() {
         r.data,
         ...current.filter((item) => item.job_id !== r.data.job_id),
       ]);
+      const nextSuggestions = rememberJobInput(jobInputSuggestions, job);
+      setJobInputSuggestions(nextSuggestions);
+      if (auth) {
+        try {
+          window.localStorage.setItem(
+            jobInputHistoryKey(auth.user_id),
+            JSON.stringify(nextSuggestions),
+          );
+        } catch {}
+      }
       setJob(blankJob);
       setView("jobs");
       notify("", "Job baru berhasil disimpan.");
@@ -1262,6 +1322,7 @@ export default function Home() {
                     Model motor *
                     <input
                       required
+                      list="job-model-suggestions"
                       value={job.motorcycle_model}
                       onChange={(e) =>
                         setJob({ ...job, motorcycle_model: e.target.value })
@@ -1272,6 +1333,7 @@ export default function Home() {
                     Jenis pekerjaan *
                     <input
                       required
+                      list="job-work-type-suggestions"
                       value={job.work_type}
                       onChange={(e) =>
                         setJob({ ...job, work_type: e.target.value })
@@ -1303,6 +1365,7 @@ export default function Home() {
                   <label>
                     Nama pelanggan
                     <input
+                      list="job-customer-suggestions"
                       value={job.customer_name}
                       onChange={(e) =>
                         setJob({ ...job, customer_name: e.target.value })
@@ -1313,12 +1376,28 @@ export default function Home() {
                     WhatsApp
                     <input
                       inputMode="tel"
+                      list="job-whatsapp-suggestions"
                       value={job.customer_whatsapp}
                       onChange={(e) =>
                         setJob({ ...job, customer_whatsapp: e.target.value })
                       }
                     />
                   </label>
+                  <p className="b-autocomplete-help">
+                    Saran berasal dari input Job yang sebelumnya berhasil disimpan di perangkat ini.
+                  </p>
+                  <datalist id="job-model-suggestions">
+                    {jobInputSuggestions.motorcycleModels.map((value) => <option key={value} value={value} />)}
+                  </datalist>
+                  <datalist id="job-work-type-suggestions">
+                    {jobInputSuggestions.workTypes.map((value) => <option key={value} value={value} />)}
+                  </datalist>
+                  <datalist id="job-customer-suggestions">
+                    {jobInputSuggestions.customerNames.map((value) => <option key={value} value={value} />)}
+                  </datalist>
+                  <datalist id="job-whatsapp-suggestions">
+                    {jobInputSuggestions.customerWhatsapps.map((value) => <option key={value} value={value} />)}
+                  </datalist>
                   <label>
                     Catatan
                     <textarea

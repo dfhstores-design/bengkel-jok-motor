@@ -944,6 +944,12 @@ button:disabled {
 .b-work-media {
   margin-top: 17px;
 }
+.b-autocomplete-help {
+  margin: -3px 0 1px;
+  color: #69756e;
+  font-size: 11px;
+  line-height: 1.4;
+}
 .b-work-media h3 {
   margin: 0;
   font-size: 15px;
