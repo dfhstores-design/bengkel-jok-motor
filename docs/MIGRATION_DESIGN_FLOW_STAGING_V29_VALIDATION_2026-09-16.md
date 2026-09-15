@@ -24,6 +24,7 @@ Helper `seedStagingAuthUsers` tidak lagi menghitung hash dari PIN literal di sou
 | Node regression suite | PASS, 14/14 termasuk guard source tanpa PIN seed literal. |
 | Syntax Apps Script | PASS pada source repo dan checkout staging. |
 | Apps Script v29 archive | PASS, lima file clone immutable sama dengan checkout staging; nol literal PIN pada field PIN. |
+| Apps Script v29 direct read | PASS. Endpoint deployment v29 membaca dua user login aktif dengan HTTP 200; respons tidak memuat key PIN/hash/token/secret. |
 | Vercel build | PASS, 19 route. Ada delapan warning CSS lama dari Autoprefixer tentang `flex-end`; tidak ada error build. |
 | Preview mobile 390×844 | PASS. Login page memiliki konten, dropdown pengguna, keypad, 13 tombol, tanpa overflow horizontal dan tanpa error overlay. |
 | Console mobile | PASS WITH EXPECTED RESPONSE. Satu HTTP 401 berasal dari `/api/auth/session` ketika belum ada sesi; ini adalah perilaku login awal yang diharapkan. |
