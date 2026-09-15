@@ -1791,11 +1791,6 @@ button:disabled {
   stroke-linecap: round;
   stroke-linejoin: round;
 }
-.b-line-chart circle {
-  fill: #fff;
-  stroke: #078b4a;
-  stroke-width: 3;
-}
 .b-line-labels {
   display: flex;
   justify-content: space-between;

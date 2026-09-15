@@ -52,15 +52,6 @@ type Expense = {
   supplier: string;
   notes: string;
 };
-type Dash = {
-  as_of: string;
-  active_job_count: number;
-  income_today: number;
-  income_month: number;
-  expense_month: number;
-  inconsistencies: { job_id: string }[];
-  active_jobs: Job[];
-};
 type Recap = {
   date_from: string;
   date_to: string;
@@ -214,9 +205,6 @@ function Chart({
           ))}
           <path className="b-line-area" d={area} />
           <path className="b-line-path" d={line} />
-          {coordinates.map((point) => (
-            <circle key={point.key} cx={point.x} cy={point.y} r="4.5"><title>{`${point.label}: ${money(point.income)}`}</title></circle>
-          ))}
         </svg>
         <div className="b-line-labels">
           {labels.map((point) => <small key={point.key} title={`${point.label}: ${money(point.income)}`}>{point.label}</small>)}
@@ -436,7 +424,6 @@ export default function Home() {
     [pin, setPin] = useState(""),
     [authBusy, setAuthBusy] = useState(false),
     [view, setView] = useState<View>("home"),
-    [dash, setDash] = useState<Dash | null>(null),
     [activeJobs, setActiveJobs] = useState<Job[]>([]),
     [recap, setRecap] = useState<Recap | null>(null),
     [history, setHistory] = useState<Job[]>([]),
@@ -453,8 +440,8 @@ export default function Home() {
     [message, setMessage] = useState(""),
     [menuOpen, setMenuOpen] = useState(false);
   const loadVersion = useRef(0);
-  const dashboardRequest = useRef(false);
   const activeJobsRequest = useRef(false);
+  const reportCache = useRef(new Map<string, { recap?: Recap; history?: Job[]; expenses?: Expense[]; refreshedAt: string }>());
   const detailLoadVersion = useRef(0);
   const createJobRequest = useRef(false);
   const createJobKey = useRef<string | null>(null);
@@ -471,22 +458,29 @@ export default function Home() {
   async function load(from = periodFrom, to = periodTo) {
     if (!auth) return;
     const version = ++loadVersion.current;
+    const read = async (path: string, attempts = 2) => {
+      for (let attempt = 0; attempt < attempts; attempt += 1) {
+        try {
+          const response = await fetch(path, {
+            cache: "no-store",
+            signal: AbortSignal.timeout(25000),
+          });
+          if (response.ok) {
+            const result = await response.json();
+            if (result.success) return result;
+          }
+        } catch {}
+        if (attempt + 1 < attempts)
+          await new Promise((resolve) => setTimeout(resolve, 600));
+      }
+      return { success: false };
+    };
     if (!owner) {
       setPeriodLoading(false);
       if (!activeJobsRequest.current && ["home", "jobs", "new"].includes(view)) {
         activeJobsRequest.current = true;
         void (async () => {
-          const readActiveJobs = async () => {
-            try {
-              const response = await fetch("/api/jobs", { cache: "no-store", signal: AbortSignal.timeout(15000) });
-              return response.ok ? await response.json() : { success: false };
-            } catch { return { success: false }; }
-          };
-          let result = await readActiveJobs();
-          if (!result.success) {
-            await new Promise((resolve) => setTimeout(resolve, 600));
-            result = await readActiveJobs();
-          }
+          const result = await read("/api/jobs");
           activeJobsRequest.current = false;
           if (result.success && result.data) {
             setActiveJobs(result.data);
@@ -496,58 +490,54 @@ export default function Home() {
       }
       return;
     }
-    setPeriodLoading(true);
+    setError("");
     const qs = `?date_from=${encodeURIComponent(from)}&date_to=${encodeURIComponent(to)}`;
-    const read = async (path: string) => {
-      try {
-        const response = await fetch(path, {
-          cache: "no-store",
-          signal: AbortSignal.timeout(15000),
-        });
-        if (!response.ok) return { success: false };
-        return await response.json();
-      } catch {
-        return { success: false };
-      }
-    };
+    const cacheKey = `${from}:${to}`;
     const needsHistory = ["home", "history", "sales", "report"].includes(view);
     const needsExpenses = view === "expense";
     const needsRecap = ["home", "sales", "report"].includes(view);
-    const needsDashboard =
-      !dash &&
-      !dashboardRequest.current &&
-      ["home", "jobs", "new"].includes(view);
-    if (needsDashboard) {
-      dashboardRequest.current = true;
-      void read("/api/dashboard").then((result) => {
-        dashboardRequest.current = false;
-        if (version === loadVersion.current && result.success && result.data)
-          setDash(result.data);
+    const cached = reportCache.current.get(cacheKey);
+    const hasCachedData = Boolean(
+      cached &&
+        (!needsRecap || cached.recap) &&
+        (!needsHistory || cached.history) &&
+        (!needsExpenses || cached.expenses),
+    );
+    if (cached?.recap) setRecap(cached.recap);
+    if (cached?.history) setHistory(cached.history);
+    if (cached?.expenses) setExpenses(cached.expenses);
+    if (hasCachedData && cached) setLastRefreshed(cached.refreshedAt);
+    setPeriodLoading(!hasCachedData);
+    const r = needsRecap ? await read(`/api/recap${qs}`) : { success: true, data: undefined };
+    if (version !== loadVersion.current) return;
+    if (r.success && r.data) setRecap(r.data);
+    const h = needsHistory ? await read(`/api/history${qs}`) : { success: true, data: undefined };
+    if (version !== loadVersion.current) return;
+    if (h.success && h.data) setHistory(h.data || []);
+    const e = needsExpenses ? await read(`/api/expenses${qs}`) : { success: true, data: undefined };
+    if (version !== loadVersion.current) return;
+    if (e.success && e.data) setExpenses(e.data || []);
+    if (["home", "jobs", "new"].includes(view) && !activeJobsRequest.current) {
+      activeJobsRequest.current = true;
+      void read("/api/jobs").then((jobs) => {
+        activeJobsRequest.current = false;
+        if (jobs.success && jobs.data) setActiveJobs(jobs.data);
       });
-    }
-    for (let attempt = 0; attempt < 2; attempt += 1) {
-      // Apps Script is more reliable when the report reads are not competing
-      // with each other. Recap appears first; detailed history follows for charts.
-      const r = needsRecap ? await read(`/api/recap${qs}`) : { success: true };
-      if (version !== loadVersion.current) return;
-      if (r.success && r.data) setRecap(r.data);
-      const h = needsHistory ? await read(`/api/history${qs}`) : { success: true };
-      if (version !== loadVersion.current) return;
-      const e = needsExpenses ? await read(`/api/expenses${qs}`) : { success: true };
-      if (version !== loadVersion.current) return;
-      if (h.success && h.data) setHistory(h.data || []);
-      if (e.success && e.data) setExpenses(e.data || []);
-      if (r.success && h.success && e.success) {
-        setPeriodLoading(false);
-        setLastRefreshed(new Date().toISOString());
-        return;
-      }
-      if (attempt === 0)
-        await new Promise((resolve) => setTimeout(resolve, 900));
     }
     if (version === loadVersion.current) {
       setPeriodLoading(false);
-      setError("Data periode belum termuat lengkap. Coba lagi sebentar.");
+      if (r.success && h.success && e.success) {
+        const refreshedAt = new Date().toISOString();
+        reportCache.current.set(cacheKey, {
+          recap: r.data || cached?.recap,
+          history: h.data || cached?.history,
+          expenses: e.data || cached?.expenses,
+          refreshedAt,
+        });
+        setLastRefreshed(refreshedAt);
+      } else if (!hasCachedData) {
+        setError("Data periode belum termuat lengkap. Tekan Refresh untuk mencoba lagi.");
+      }
     }
   }
   function applyPeriod() {
@@ -699,18 +689,10 @@ export default function Home() {
         return;
       }
       createJobKey.current = null;
-      if (owner) {
-        setDash((current) => current && {
-          ...current,
-          active_job_count: current.active_job_count + 1,
-          active_jobs: [r.data, ...current.active_jobs],
-        });
-      } else {
-        setActiveJobs((current) => [
-          r.data,
-          ...current.filter((item) => item.job_id !== r.data.job_id),
-        ]);
-      }
+      setActiveJobs((current) => [
+        r.data,
+        ...current.filter((item) => item.job_id !== r.data.job_id),
+      ]);
       setJob(blankJob);
       setView("jobs");
       notify("", "Job baru berhasil disimpan.");
@@ -751,7 +733,7 @@ export default function Home() {
   }
   async function openDetail(id: string) {
     const version = ++detailLoadVersion.current;
-    const summary = [...activeJobs, ...(dash?.active_jobs || [])].find((job) => job.job_id === id);
+    const summary = activeJobs.find((job) => job.job_id === id);
     setPaymentOpen(false);
     if (summary) setDetail({ ...summary, media: summary.media || [] });
     try {
@@ -1029,7 +1011,7 @@ export default function Home() {
         </div>
       </main>
     );
-  const active = (owner ? dash?.active_jobs || [] : activeJobs).filter(
+  const active = activeJobs.filter(
     (j) => !owner || (j.created_at.slice(0, 10) >= periodFrom && j.created_at.slice(0, 10) <= periodTo),
   );
   const period = recap ? `${recap.date_from} s/d ${recap.date_to}` : "Memuat…";
@@ -1191,7 +1173,7 @@ export default function Home() {
               <div>
                 <span className="b-metric-icon">🔧</span>
                 <small>Job aktif</small>
-                <b>{dash?.active_job_count || 0}</b>
+                <b>{active.length}</b>
               </div>
               <div>
                 <span className="b-metric-icon">💵</span>
