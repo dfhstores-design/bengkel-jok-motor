@@ -17,7 +17,7 @@ Status: **PASS — CURRENT READ-ONLY BACKUP CREATED; NO DEPLOYMENT PERFORMED**
 - Drive XLSX export copy: [download/open](https://docs.google.com/spreadsheets/d/1ZgHPkTnu7oQuAY8H3U37PjmbqA3hLnG9/edit?usp=drivesdk).
 - Local file size: 15,831 bytes.
 - SHA-256: `49E4DEE7DBD3C144527EDC6D4BE639DCA842472DF99FB69DF9529A05B5587813`.
-- Export opened and read back with a spreadsheet reader.
+- Export opened and read back with a spreadsheet reader. The XLSX stored in the checkpoint Drive folder was downloaded again; its 15,831 bytes and SHA-256 match the local export exactly.
 
 ## Read-back and integrity checks
 
