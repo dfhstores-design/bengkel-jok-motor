@@ -45,3 +45,5 @@ Helper `seedStagingAuthUsers` tidak lagi menghitung hash dari PIN literal di sou
 ## Safety record
 
 Tidak ada deployment, konfigurasi, API write, schema, Sheet, Drive media, atau data operational production yang diubah. Staging hanya menerima source Apps Script v29, deployment v29, dan Preview Vercel baru. Dashboard Owner/Operator tidak diubah.
+
+Bundle historis mentah awal telah dihapus dari Drive setelah bundle tersanitasi diverifikasi. Pembersihan salinan mentah lokal yang dibuat pada tahap archive ditolak oleh kebijakan eksekusi mesin; salinan itu tidak boleh dipakai atau dibagikan dan tetap menjadi housekeeping lokal yang perlu diselesaikan melalui jalur penghapusan yang diizinkan.
