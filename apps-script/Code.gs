@@ -212,7 +212,7 @@ function doPost(e) {
 function handleRequest_(e) {
   const action = e && e.parameter ? e.parameter.action : null;
   try {
-    var protectedActions = ['healthCheck', 'createJob', 'listActiveJobs', 'listClosedJobs', 'getDashboard', 'getRecap', 'getJob', 'closeJob', 'addJobMedia', 'listJobMedia', 'createExpense', 'listExpenses', 'addExpenseReceipt', 'listExpenseMedia', 'editClosedJob'];
+    var protectedActions = ['healthCheck', 'createJob', 'listActiveJobs', 'listClosedJobs', 'getDashboard', 'getRecap', 'getOwnerReport', 'getJob', 'closeJob', 'addJobMedia', 'listJobMedia', 'createExpense', 'listExpenses', 'addExpenseReceipt', 'listExpenseMedia', 'editClosedJob'];
     var requestBody = null;
     if (e && e.postData && e.postData.contents) { try { requestBody = parseBody_(e); } catch (ignore) {} }
     if (protectedActions.indexOf(action) >= 0) requireAuth_(e, requestBody, null);
@@ -230,6 +230,7 @@ function handleRequest_(e) {
     if (action === 'listClosedJobs') return jsonOutput_(listClosedJobs_(e && e.parameter ? e.parameter : {}));
     if (action === 'getDashboard') return jsonOutput_(getDashboard_());
     if (action === 'getRecap') return jsonOutput_(getRecap_(e && e.parameter ? e.parameter : {}));
+    if (action === 'getOwnerReport') return jsonOutput_(getOwnerReport_(e && e.parameter ? e.parameter : {}));
     if (action === 'getJob') return jsonOutput_(getJob_(e && e.parameter ? e.parameter.job_id : null));
     if (action === 'closeJob') return jsonOutput_(closeJob_(e));
     if (action === 'addJobMedia') return jsonOutput_(addJobMedia_(e));
@@ -439,6 +440,68 @@ function getRecap_(params) {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(from) || !/^\d{4}-\d{2}-\d{2}$/.test(to) || from > to) return fail_('Periode tanggal tidak valid.');
     return ok_({ date_from: from, date_to: to, snapshot: financialSnapshot_(from, to) }, 'Ringkasan berhasil dimuat.');
   } catch (error) { logEvent_('getRecap', null, 'ERROR', String(error)); return fail_('Ringkasan tidak dapat dimuat.'); }
+}
+
+function getOwnerReport_(params) {
+  try {
+    params = params || {};
+    var today = Utilities.formatDate(new Date(), APP.TIMEZONE, 'yyyy-MM-dd');
+    var from = text_(params.date_from) || today.slice(0, 7) + '-01';
+    var to = text_(params.date_to) || today;
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(from) || !/^\d{4}-\d{2}-\d{2}$/.test(to) || from > to) return fail_('Periode tanggal tidak valid.');
+
+    var jobs = allJobRecords_();
+    var payments = allPaymentRecords_();
+    var expenses = allExpenseRecords_();
+    var paymentByJob = {};
+    var totalIncome = 0;
+    var totalExpense = 0;
+    var closedCount = 0;
+    var inconsistencies = [];
+    var history = [];
+    var activeJobs = [];
+
+    payments.forEach(function(payment) {
+      paymentByJob[String(payment.job_id)] = payment;
+      if (periodMatches_(payment.created_at, from, to)) totalIncome += Number(payment.amount) || 0;
+    });
+    expenses.forEach(function(expense) {
+      if (periodMatches_(expense.expense_date || expense.created_at, from, to)) totalExpense += Number(expense.total_amount) || 0;
+    });
+    jobs.forEach(function(job) {
+      if (String(job.status) === 'IN_PROGRESS') {
+        activeJobs.push(job);
+        return;
+      }
+      if (String(job.status) !== 'CLOSED' || !periodMatches_(job.closed_at || job.updated_at, from, to)) return;
+      var payment = paymentByJob[String(job.job_id)] || null;
+      job.payment = payment;
+      history.push(job);
+      if (payment) closedCount += 1;
+      else inconsistencies.push({ job_id: job.job_id, issue: 'CLOSED_WITHOUT_PAYMENT' });
+    });
+    history.sort(function(a, b) { return String(b.closed_at || b.updated_at).localeCompare(String(a.closed_at || a.updated_at)); });
+    activeJobs.sort(function(a, b) { return String(b.created_at).localeCompare(String(a.created_at)); });
+
+    return ok_({
+      recap: {
+        date_from: from,
+        date_to: to,
+        snapshot: {
+          total_income: totalIncome,
+          total_expense: totalExpense,
+          difference: totalIncome - totalExpense,
+          closed_job_count: closedCount,
+          inconsistencies: inconsistencies,
+        },
+      },
+      history: history,
+      active_jobs: activeJobs,
+    }, 'Data Owner berhasil dimuat.');
+  } catch (error) {
+    logEvent_('getOwnerReport', null, 'ERROR', String(error && error.message ? error.message : error));
+    return fail_('Data Owner tidak dapat dimuat.');
+  }
 }
 
 function validatePaymentInput_(body) {

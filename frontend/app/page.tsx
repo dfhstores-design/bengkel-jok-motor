@@ -506,18 +506,35 @@ export default function Home() {
     if (cached?.recap) setRecap(cached.recap);
     if (cached?.history) setHistory(cached.history);
     if (cached?.expenses) setExpenses(cached.expenses);
+    if (needsRecap && !cached?.recap) setRecap(null);
+    if (needsHistory && !cached?.history) setHistory([]);
+    if (needsExpenses && !cached?.expenses) setExpenses([]);
     if (hasCachedData && cached) setLastRefreshed(cached.refreshedAt);
+    if (!hasCachedData) setLastRefreshed(null);
     setPeriodLoading(!hasCachedData);
-    const r = needsRecap ? await read(`/api/recap${qs}`) : { success: true, data: undefined };
+    let r = { success: true, data: undefined as Recap | undefined };
+    let h = { success: true, data: undefined as Job[] | undefined };
+    let activeIncluded = false;
+    if (needsRecap && needsHistory) {
+      const report = await read(`/api/report${qs}`);
+      r = { success: report.success, data: report.data?.recap };
+      h = { success: report.success, data: report.data?.history };
+      if (report.success && report.data?.active_jobs) {
+        setActiveJobs(report.data.active_jobs);
+        activeIncluded = true;
+      }
+    } else {
+      if (needsRecap) r = await read(`/api/recap${qs}`);
+      if (version !== loadVersion.current) return;
+      if (needsHistory) h = await read(`/api/history${qs}`);
+    }
     if (version !== loadVersion.current) return;
     if (r.success && r.data) setRecap(r.data);
-    const h = needsHistory ? await read(`/api/history${qs}`) : { success: true, data: undefined };
-    if (version !== loadVersion.current) return;
     if (h.success && h.data) setHistory(h.data || []);
     const e = needsExpenses ? await read(`/api/expenses${qs}`) : { success: true, data: undefined };
     if (version !== loadVersion.current) return;
     if (e.success && e.data) setExpenses(e.data || []);
-    if (["home", "jobs", "new"].includes(view) && !activeJobsRequest.current) {
+    if (["home", "jobs", "new"].includes(view) && !activeIncluded && !activeJobsRequest.current) {
       activeJobsRequest.current = true;
       void read("/api/jobs").then((jobs) => {
         activeJobsRequest.current = false;
