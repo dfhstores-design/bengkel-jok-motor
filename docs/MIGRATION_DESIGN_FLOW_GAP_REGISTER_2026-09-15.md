@@ -10,10 +10,10 @@ This register refreshes the 2026-09-15 checkpoint against the current checkout a
 |---|---|
 | Repository | `D:\Documents\AI-GPT\Aplikasi Bengkel Jok Motor\repo-checkout` |
 | Branch | `codex/operator-idle-timeout-2026-09-15` |
-| Candidate commit | `08e302a` — active-user login dropdown; includes `9a752f9` role-specific timeout, `d5da235` cookie expiry, and `c3cfd26` token response protection |
-| Staging Vercel preview | `https://aplikasi-bengkel-staging-20260912-2svr44pw1-dfhstores-projects.vercel.app` (`dpl_A3YPo5iRXkd7oMLKnoF9G4UiTwMu`, READY, Preview) |
+| Candidate commit | `92b0256` — safe retry for login user lookup; includes `08e302a` active-user login dropdown, `9a752f9` role-specific timeout, `d5da235` cookie expiry, and `c3cfd26` token response protection |
+| Staging Vercel preview | `https://aplikasi-bengkel-staging-20260912-mh4b8v5tc-dfhstores-projects.vercel.app` (`dpl_2oMcYtnLfv2fVMR6oqBCnDnpwYXg`, READY, Preview) |
 | Staging Apps Script | Version 27 — `Role-specific idle timeout staging 2026-09-15`; the preview `APPS_SCRIPT_API_URL` was replaced only in the Preview environment to point to this deployment |
-| Scoped files in current candidate | `apps-script/Auth.gs`; `frontend/app/api/auth/login/route.ts`; `frontend/app/page.tsx`; `frontend/app/globals.css`; auth contract/tests/gap documentation |
+| Scoped files in current candidate | `apps-script/Auth.gs`; auth login/user routes; `frontend/app/page.tsx`; `frontend/app/globals.css`; auth contract/tests/gap documentation |
 | Local validation | 7/7 Node tests passed; Next.js build completed (19 routes) after auth and login UI changes; Apps Script auth source syntax check passed; `git diff --check` passed before each scoped commit |
 | Preserved worktree changes | `.gitignore`, `frontend/.gitignore`, checkpoint and three mobile screenshots remain outside this commit |
 | Drive checkpoint | Fetched checkpoint matches the local 2026-09-15 checkpoint content. The Drive folder listing confirms the checkpoint is present. |
@@ -25,7 +25,7 @@ This register refreshes the 2026-09-15 checkpoint against the current checkout a
 - The checkpoint staging alias still identifies itself as Sprint 5. The candidate review URL above is the only URL that proves the current staging deployment; HTTP 200 alone remains insufficient evidence.
 - The staging Apps Script project ID and version 27 deployment were verified through its isolated `clasp` configuration. Production Apps Script/Sheet/Drive identity, permissions, and resource mapping remain unverified in this session.
 - The latest production backup, checksum/read-back, row/ID/relationship baseline, and rollback lineage remain **historical evidence only** from 2026-09-11/12. They are not a current pre-migration backup.
-- Staging interaction evidence for authentication, user/PIN administration, operational flows, exports, chart filters, mobile layout, and latency is historical. It must be rerun against a preview/backend pair proven to use this candidate.
+- Fresh candidate evidence: the current preview reaches the login screen with the approved dropdown/keypad flow; the active-user lookup returned HTTP 200 in 3.35 seconds after deployment. The earlier three-sample preview read measurement was 2.72–3.03 seconds. These read-only samples do not prove POST reliability or the full operational matrix.
 
 ## Product Foundation check
 
@@ -42,7 +42,7 @@ Product Foundation documents 00–10 and 09A were reviewed from the local DOCX s
 | High | Owner/Operator login/logout/session refresh and response secrecy. | Browser login via active-user dropdown and keypad passed for both roles; logout returned to login state. Login JSON did not expose PIN or session token; cookies carry 6h Owner / 2h Operator. Server execution smoke tooling returned `NOT_FOUND`, controlled expiry and PIN-change role denial remain unproven. | PARTIAL |
 | High | Job/Payment/Close Job/media/Expense/history edit/audit and duplicate-submit checks are not tied to the candidate commit. | Repeat the complete Owner/Operator staging interaction matrix and verify immutable IDs/status/payment/relations and audit trail. | OPEN |
 | High | All period filters, chart-per-day values, tables/cards/reports consistency, PDF/Excel download content, and 390×844 layout are not freshly validated on this candidate. | Repeat on the authenticated candidate preview, capture fresh screenshots/download checks, and verify no horizontal overflow. | OPEN |
-| High | Latency and recovery after transient failures. | Login observed both a successful UI retry and failed direct/route attempts (about 4–47 seconds). Vercel error-log query returned no application logs. Collect a structured multi-run latency sample and investigate reliable POST relay behavior. | OPEN / BLOCKER FOR RELEASE |
+| High | Latency and recovery after transient failures. | Login observed both a successful UI retry and failed direct/route attempts (about 4–47 seconds). Read-only user lookup later measured 2.72–3.35 seconds with HTTP 200; the lookup route now retries one transient GET failure. Vercel error-log query returned no application logs. Collect a structured multi-run latency sample and investigate reliable POST relay behavior. | OPEN / BLOCKER FOR RELEASE |
 | Medium | Draft PR #1 remains open/draft at checkpoint commit `74c0788`; it is not this candidate. | Prepare a review branch/PR update only after staging validation and bind all evidence to the exact candidate commit. | OPEN |
 | Medium | Existing uncommitted `.gitignore` changes and three untracked screenshots were retained and excluded from the scoped candidate commit. | Review or keep separate later; do not silently discard or mix them with product changes. | PRESERVED |
 
