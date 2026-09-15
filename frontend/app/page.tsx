@@ -214,6 +214,23 @@ function Chart({
     );
   const points = reportPoints(recap, history);
   const max = Math.max(...points.map((x) => x.income), 1);
+  const chartWidth = 340;
+  const chartHeight = 170;
+  const left = 12;
+  const right = 12;
+  const top = 12;
+  const bottom = 18;
+  const plotWidth = chartWidth - left - right;
+  const plotHeight = chartHeight - top - bottom;
+  const coordinates = points.map((point, index) => ({
+    ...point,
+    x: points.length === 1 ? chartWidth / 2 : left + (index / (points.length - 1)) * plotWidth,
+    y: top + (1 - point.income / max) * plotHeight,
+  }));
+  const line = coordinates.map((point, index) => `${index ? "L" : "M"}${point.x} ${point.y}`).join(" ");
+  const area = coordinates.length
+    ? `${line} L${coordinates[coordinates.length - 1].x} ${top + plotHeight} L${coordinates[0].x} ${top + plotHeight} Z`
+    : "";
   return (
     <section className="b-card chart-card">
       <div className="b-section-title">
@@ -221,44 +238,24 @@ function Chart({
           <p className="b-eyebrow">RINGKASAN GRAFIK</p>
           <h2>Penjualan sesuai periode laporan</h2>
           <small>
-            {formatPeriodDate(recap.date_from)} – {formatPeriodDate(recap.date_to)} · Pemasukan dan Job selesai
+            {formatPeriodDate(recap.date_from)} – {formatPeriodDate(recap.date_to)} · Pemasukan harian
           </small>
         </div>
       </div>
-      <div className="b-chart b-chart-week">
-        {points.map((x) => (
-          <div className="b-bar" key={x.key} title={`${x.label}: ${money(x.income)}, ${x.jobs} Job selesai`}>
-            <div className="b-stack">
-              <i
-                className="in"
-                style={{
-                  height: `${Math.max(x.income ? 25 : 4, Math.round((x.income / max) * 84))}px`,
-                }}
-              >
-                {x.income ? money(x.income) : "Rp 0"}
-              </i>
-              <i
-                className="jobs"
-                style={{ height: `${Math.max(22, x.jobs * 25)}px` }}
-              >
-                {x.jobs} Job
-              </i>
-            </div>
-            <small>
-              {x.label}
-            </small>
-          </div>
-        ))}
-      </div>
-      <div className="b-legend">
-        <span>
-          <i className="in" />
-          Pemasukan (Rp)
-        </span>
-        <span>
-          <i className="jobs" />
-          Job selesai
-        </span>
+      <div className="b-line-chart" role="img" aria-label="Grafik pemasukan sesuai periode laporan">
+        <svg viewBox={`0 0 ${chartWidth} ${chartHeight}`} preserveAspectRatio="none" aria-hidden="true">
+          {[0.2, 0.45, 0.7, 0.95].map((step) => (
+            <line key={step} x1={left} x2={chartWidth - right} y1={top + plotHeight * step} y2={top + plotHeight * step} />
+          ))}
+          <path className="b-line-area" d={area} />
+          <path className="b-line-path" d={line} />
+          {coordinates.map((point) => (
+            <circle key={point.key} cx={point.x} cy={point.y} r="4.5" />
+          ))}
+        </svg>
+        <div className="b-line-labels">
+          {coordinates.map((point) => <small key={point.key} title={`${point.label}: ${money(point.income)}`}>{point.label}</small>)}
+        </div>
       </div>
     </section>
   );
@@ -475,6 +472,7 @@ export default function Home() {
     [authBusy, setAuthBusy] = useState(false),
     [view, setView] = useState<View>("home"),
     [dash, setDash] = useState<Dash | null>(null),
+    [activeJobs, setActiveJobs] = useState<Job[]>([]),
     [recap, setRecap] = useState<Recap | null>(null),
     [history, setHistory] = useState<Job[]>([]),
     [expenses, setExpenses] = useState<Expense[]>([]),
@@ -491,6 +489,8 @@ export default function Home() {
     [menuOpen, setMenuOpen] = useState(false);
   const loadVersion = useRef(0);
   const dashboardRequest = useRef(false);
+  const activeJobsRequest = useRef(false);
+  const detailLoadVersion = useRef(0);
   const owner = auth?.role === "OWNER";
   const loginUser =
     users.find((u) => u.role === role) ||
@@ -504,6 +504,31 @@ export default function Home() {
   async function load(from = periodFrom, to = periodTo) {
     if (!auth) return;
     const version = ++loadVersion.current;
+    if (!owner) {
+      setPeriodLoading(false);
+      if (!activeJobsRequest.current && ["home", "jobs", "new"].includes(view)) {
+        activeJobsRequest.current = true;
+        void (async () => {
+          const readActiveJobs = async () => {
+            try {
+              const response = await fetch("/api/jobs", { cache: "no-store", signal: AbortSignal.timeout(15000) });
+              return response.ok ? await response.json() : { success: false };
+            } catch { return { success: false }; }
+          };
+          let result = await readActiveJobs();
+          if (!result.success) {
+            await new Promise((resolve) => setTimeout(resolve, 600));
+            result = await readActiveJobs();
+          }
+          activeJobsRequest.current = false;
+          if (version === loadVersion.current && result.success && result.data) {
+            setActiveJobs(result.data);
+            setLastRefreshed(new Date().toISOString());
+          }
+        })();
+      }
+      return;
+    }
     setPeriodLoading(true);
     const qs = `?date_from=${encodeURIComponent(from)}&date_to=${encodeURIComponent(to)}`;
     const read = async (path: string) => {
@@ -743,19 +768,25 @@ export default function Home() {
     }
   }
   async function openDetail(id: string) {
-    setDetailBusy(true);
+    const version = ++detailLoadVersion.current;
+    const summary = [...activeJobs, ...(dash?.active_jobs || [])].find((job) => job.job_id === id);
+    setPaymentOpen(false);
+    if (summary) setDetail({ ...summary, media: summary.media || [] });
     try {
       const r = await fetch(`/api/jobs/${encodeURIComponent(id)}`, {
         cache: "no-store",
+        signal: AbortSignal.timeout(8000),
       }).then((x) => x.json());
-      if (r.success) {
-        setPaymentOpen(false);
-        setDetail(r.data);
-      }
-      else setError(r.message);
-    } finally {
-      setDetailBusy(false);
+      if (r.success && version === detailLoadVersion.current) setDetail(r.data);
+      else if (!summary && version === detailLoadVersion.current) setError(r.message || "Detail Job belum dapat dimuat.");
+    } catch {
+      if (!summary && version === detailLoadVersion.current) setError("Detail Job belum dapat dimuat.");
     }
+  }
+  function dismissDetail() {
+    detailLoadVersion.current += 1;
+    setPaymentOpen(false);
+    setDetail(null);
   }
   async function closeJob(e: FormEvent) {
     e.preventDefault();
@@ -778,7 +809,7 @@ export default function Home() {
         setError(r.message);
         return;
       }
-      setDetail(null);
+      dismissDetail();
       await load();
       notify("", "Payment berhasil dicatat dan Job CLOSED.");
     } finally {
@@ -1016,10 +1047,8 @@ export default function Home() {
         </div>
       </main>
     );
-  const active = (dash?.active_jobs || []).filter(
-    (j) =>
-      j.created_at.slice(0, 10) >= periodFrom &&
-      j.created_at.slice(0, 10) <= periodTo,
+  const active = (owner ? dash?.active_jobs || [] : activeJobs).filter(
+    (j) => !owner || (j.created_at.slice(0, 10) >= periodFrom && j.created_at.slice(0, 10) <= periodTo),
   );
   const period = recap ? `${recap.date_from} s/d ${recap.date_to}` : "Memuat…";
   return (
@@ -1559,10 +1588,10 @@ export default function Home() {
       {detail && (
         <div
           className={owner ? "b-modal" : "b-operator-detail"}
-          onClick={() => owner && setDetail(null)}
+          onClick={() => owner && dismissDetail()}
         >
           <article onClick={(e) => e.stopPropagation()}>
-            <button className="b-close" onClick={() => setDetail(null)}>
+            <button className="b-close" onClick={dismissDetail}>
               {owner ? "Tutup" : "← Kembali"}
             </button>
             <p className="b-eyebrow">JOB DETAIL</p>
