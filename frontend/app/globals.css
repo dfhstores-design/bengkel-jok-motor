@@ -953,6 +953,21 @@ button:disabled {
   color: #69756e;
   font-size: 11px;
 }
+.b-work-media > .b-media-upload-success {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 8px 0 11px;
+  padding: 9px 10px;
+  border: 1px solid #b7ddc8;
+  border-radius: 9px;
+  background: #f0faf4;
+  color: #176b50;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
 .b-media-slots {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -1754,6 +1769,9 @@ button:disabled {
 }
 .b-operator-detail .b-work-media > p {
   display: none;
+}
+.b-operator-detail .b-work-media > .b-media-upload-success {
+  display: flex;
 }
 .b-close-job {
   min-height: 54px;

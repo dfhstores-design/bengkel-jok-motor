@@ -439,6 +439,7 @@ export default function Home() {
     [detail, setDetail] = useState<Job | null>(null),
     [busy, setBusy] = useState(false),
     [detailBusy, setDetailBusy] = useState(false),
+    [mediaUploadMessage, setMediaUploadMessage] = useState(""),
     [paymentOpen, setPaymentOpen] = useState(false),
     [periodLoading, setPeriodLoading] = useState(false),
     [lastRefreshed, setLastRefreshed] = useState<string | null>(null),
@@ -796,6 +797,7 @@ export default function Home() {
   async function openDetail(id: string) {
     const version = ++detailLoadVersion.current;
     const summary = activeJobs.find((job) => job.job_id === id);
+    setMediaUploadMessage("");
     setPaymentOpen(false);
     if (summary) setDetail({ ...summary, media: summary.media || [] });
     try {
@@ -811,6 +813,7 @@ export default function Home() {
   }
   function dismissDetail() {
     detailLoadVersion.current += 1;
+    setMediaUploadMessage("");
     setPaymentOpen(false);
     setDetail(null);
   }
@@ -844,6 +847,7 @@ export default function Home() {
   }
   async function uploadMedia(file: File, category: "BEFORE" | "PROCESS" | "AFTER") {
     if (!detail || detailBusy) return;
+    setMediaUploadMessage("");
     setDetailBusy(true);
     try {
       const encoded = await new Promise<string>((resolve, reject) => {
@@ -872,6 +876,8 @@ export default function Home() {
         return;
       }
       await openDetail(detail.job_id);
+      const label = category === "PROCESS" ? "Process" : category[0] + category.slice(1).toLowerCase();
+      setMediaUploadMessage(`${label}: ${file.name} berhasil diunggah dan tersimpan.`);
       notify("", `Dokumentasi ${category.toLowerCase()} berhasil diunggah.`);
     } catch {
       setError(
@@ -1672,6 +1678,11 @@ export default function Home() {
                 <section className="b-work-media" aria-label="Dokumentasi pekerjaan">
                   <h3>Dokumentasi pekerjaan</h3>
                   <p>Pilih tahap pekerjaan, lalu ambil foto atau video.</p>
+                  {mediaUploadMessage && (
+                    <p className="b-media-upload-success" role="status" aria-live="polite">
+                      ✓ {mediaUploadMessage}
+                    </p>
+                  )}
                   <div className="b-media-slots">
                     {(["BEFORE", "PROCESS", "AFTER"] as const).map((category) => {
                       const saved = detail.media?.filter((item) => item.category === category).length || 0;
