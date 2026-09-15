@@ -11,7 +11,10 @@ export async function POST(request: NextRequest) {
     const response = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body), cache: "no-store" });
     const payload = await response.json();
     const result = NextResponse.json(payload, { status: response.ok ? 200 : response.status });
-    if (payload?.success && payload?.data?.session_token) result.cookies.set(SESSION_COOKIE, payload.data.session_token, { httpOnly: true, secure: true, sameSite: "lax", maxAge: 6 * 60 * 60, path: "/" });
+    if (payload?.success && payload?.data?.session_token) {
+      const maxAge = payload.data.role === "OPERATOR" ? 2 * 60 * 60 : 6 * 60 * 60;
+      result.cookies.set(SESSION_COOKIE, payload.data.session_token, { httpOnly: true, secure: true, sameSite: "lax", maxAge, path: "/" });
+    }
     return result;
   } catch { return fail("Login gagal terhubung ke backend."); }
 }
