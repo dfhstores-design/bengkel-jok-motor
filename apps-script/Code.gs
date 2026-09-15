@@ -394,7 +394,9 @@ function listClosedJobs_(params) {
     var query = text_(params.query).toLowerCase(), from = text_(params.date_from), to = text_(params.date_to);
     var records = allJobRecords_().filter(function(record) {
       if (String(record.status) !== 'CLOSED') return false;
-      if (!periodMatches_(record.closed_at || record.updated_at, from, to)) return false;
+      var payment = payments.find(function(item) { return String(item.job_id) === String(record.job_id); }) || null;
+      var transactionDate = payment ? payment.created_at : (record.closed_at || record.updated_at);
+      if (!periodMatches_(transactionDate, from, to)) return false;
       if (!query) return true;
       return [record.motorcycle_model, record.work_description, record.customer_name, record.customer_whatsapp].join(' ').toLowerCase().indexOf(query) !== -1;
     }).map(function(record) {
@@ -415,9 +417,10 @@ function financialSnapshot_(from, to) {
   payments.forEach(function(payment) { if (periodMatches_(payment.created_at, from, to)) paymentTotal += Number(payment.amount) || 0; });
   expenses.forEach(function(expense) { if (periodMatches_(expense.expense_date || expense.created_at, from, to)) expenseTotal += Number(expense.total_amount) || 0; });
   jobs.forEach(function(job) {
-    if (String(job.status) !== 'CLOSED' || !periodMatches_(job.closed_at || job.updated_at, from, to)) return;
+    if (String(job.status) !== 'CLOSED') return;
     var payment = payments.find(function(item) { return String(item.job_id) === String(job.job_id); });
-    if (payment) closedCount += 1; else { inconsistencies.push({ job_id: job.job_id, issue: 'CLOSED_WITHOUT_PAYMENT' }); logEvent_('financialSnapshot', job.job_id, 'INCONSISTENT', 'CLOSED_WITHOUT_PAYMENT'); }
+    if (payment && periodMatches_(payment.created_at, from, to)) closedCount += 1;
+    else if (!payment && periodMatches_(job.closed_at || job.updated_at, from, to)) { inconsistencies.push({ job_id: job.job_id, issue: 'CLOSED_WITHOUT_PAYMENT' }); logEvent_('financialSnapshot', job.job_id, 'INCONSISTENT', 'CLOSED_WITHOUT_PAYMENT'); }
   });
   return { total_income: paymentTotal, total_expense: expenseTotal, difference: paymentTotal - expenseTotal, closed_job_count: closedCount, inconsistencies: inconsistencies };
 }
@@ -474,8 +477,10 @@ function getOwnerReport_(params) {
         activeJobs.push(job);
         return;
       }
-      if (String(job.status) !== 'CLOSED' || !periodMatches_(job.closed_at || job.updated_at, from, to)) return;
+      if (String(job.status) !== 'CLOSED') return;
       var payment = paymentByJob[String(job.job_id)] || null;
+      var transactionDate = payment ? payment.created_at : (job.closed_at || job.updated_at);
+      if (!periodMatches_(transactionDate, from, to)) return;
       job.payment = payment;
       history.push(job);
       if (payment) closedCount += 1;

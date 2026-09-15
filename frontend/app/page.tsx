@@ -590,7 +590,7 @@ export default function Home() {
       return;
     }
     if (value === "all") {
-      const from = "2020-01-01";
+      const from = "1900-01-01";
       setPeriodFrom(from);
       setPeriodTo(end);
       load(from, end);
