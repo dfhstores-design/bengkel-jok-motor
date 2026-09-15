@@ -25,6 +25,10 @@ This register refreshes the 2026-09-15 checkpoint against the current checkout a
 - The latest production backup, checksum/read-back, row/ID/relationship baseline, and rollback lineage remain **historical evidence only** from 2026-09-11/12. They are not a current pre-migration backup.
 - Staging interaction evidence for authentication, user/PIN administration, operational flows, exports, chart filters, mobile layout, and latency is historical. It must be rerun against a preview/backend pair proven to use this candidate.
 
+## Product Foundation check
+
+Product Foundation documents 00–10 and 09A were reviewed from the local DOCX source. The candidate change is limited to the already specified role-specific session timeout; it does not change the business flow, four operational data tabs, API data contract, Payment cash-in source of truth, ID strategy, or existing records. Apps Script remains the only Sheets/Drive boundary. The release still requires the Sprint 0/feature Definition of Done: end-to-end backend behavior, important failure paths, data integrity, and mobile use must be proven on the isolated staging candidate before deployment approval.
+
 ## Gap register
 
 | Severity | Gap and evidence | Action needed | Status |
