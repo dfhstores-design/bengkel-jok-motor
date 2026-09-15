@@ -152,7 +152,9 @@ function editClosedJob_(e) {
 function seedStagingAuthUsers() {
   if (getConfig_().environment !== 'staging') throw new Error('STAGING_ONLY');
   var sheet = authUsersSheet_(); if (sheet.getLastRow() > 1) return { success: true, seeded: false, dataRows: sheet.getLastRow() - 1 };
-  var now = nowIso_(), hash = sha256Hex_('1234');
+  var hash = text_(PropertiesService.getScriptProperties().getProperty('STAGING_AUTH_SEED_PIN_HASH')).toLowerCase();
+  if (!/^[a-f0-9]{64}$/.test(hash)) throw new Error('STAGING_AUTH_SEED_PIN_HASH_REQUIRED');
+  var now = nowIso_();
   sheet.getRange(2, 1, 2, 7).setValues([['owner-demo', 'Owner Demo', 'OWNER', hash, true, now, now], ['operator-demo', 'Operator Demo', 'OPERATOR', hash, true, now, now]]);
   return { success: true, seeded: true, dataRows: 2 };
 }

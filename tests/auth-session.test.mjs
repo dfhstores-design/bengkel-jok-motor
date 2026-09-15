@@ -56,3 +56,8 @@ test('session with an unsupported role is rejected and removed', () => {
   assert.equal(sandbox.authSession_('unknown-role', false), null);
   assert.equal(properties.has('SESSION_unknown-role'), false);
 });
+
+test('staging auth seeding requires a preconfigured hash rather than a PIN literal', () => {
+  assert.match(source, /STAGING_AUTH_SEED_PIN_HASH/);
+  assert.doesNotMatch(source, /sha256Hex_\(\s*['"]\d{4,8}['"]\s*\)/);
+});
