@@ -491,6 +491,8 @@ export default function Home() {
   const dashboardRequest = useRef(false);
   const activeJobsRequest = useRef(false);
   const detailLoadVersion = useRef(0);
+  const createJobRequest = useRef(false);
+  const createJobKey = useRef<string | null>(null);
   const owner = auth?.role === "OWNER";
   const loginUser =
     users.find((u) => u.role === role) ||
@@ -521,7 +523,7 @@ export default function Home() {
             result = await readActiveJobs();
           }
           activeJobsRequest.current = false;
-          if (version === loadVersion.current && result.success && result.data) {
+          if (result.success && result.data) {
             setActiveJobs(result.data);
             setLastRefreshed(new Date().toISOString());
           }
@@ -712,25 +714,39 @@ export default function Home() {
   }
   async function createJob(e: FormEvent) {
     e.preventDefault();
-    if (busy) return;
+    if (busy || createJobRequest.current) return;
+    createJobRequest.current = true;
     setBusy(true);
     notify();
     try {
+      const idempotencyKey = createJobKey.current || (createJobKey.current = key());
       const r = await fetch("/api/jobs", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...job,
           work_description: `${job.work_type}: ${job.work_description}`.trim(),
-          idempotency_key: key(),
+          idempotency_key: idempotencyKey,
         }),
       }).then((x) => x.json());
       if (!r.success) {
         setError(r.message);
         return;
       }
+      createJobKey.current = null;
+      if (owner) {
+        setDash((current) => current && {
+          ...current,
+          active_job_count: current.active_job_count + 1,
+          active_jobs: [r.data, ...current.active_jobs],
+        });
+      } else {
+        setActiveJobs((current) => [
+          r.data,
+          ...current.filter((item) => item.job_id !== r.data.job_id),
+        ]);
+      }
       setJob(blankJob);
-      await load();
       setView("jobs");
       notify("", "Job baru berhasil disimpan.");
     } catch {
@@ -739,6 +755,7 @@ export default function Home() {
       );
     } finally {
       setBusy(false);
+      createJobRequest.current = false;
     }
   }
   async function createExpense(e: FormEvent) {
