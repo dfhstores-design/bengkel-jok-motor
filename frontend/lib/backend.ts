@@ -25,12 +25,24 @@ export async function backendUrl(action: string, params: Record<string, string> 
 }
 
 export async function forwardBackend(url: URL, init?: RequestInit) {
-  const attempts = (init?.method || "GET").toUpperCase() === "GET" ? 2 : 1;
+  const method = (init?.method || "GET").toUpperCase();
+  let idempotentPost = false;
+  if (method === "POST" && typeof init?.body === "string") {
+    try {
+      const body = JSON.parse(init.body);
+      idempotentPost = typeof body?.idempotency_key === "string" && body.idempotency_key.length > 0;
+    } catch {}
+  }
+  const attempts = method === "GET" || idempotentPost ? 2 : 1;
   for (let attempt = 0; attempt < attempts; attempt += 1) {
     try {
       const response = await fetch(url, { ...init, cache: "no-store" });
       const text = await response.text();
       const payload = JSON.parse(text);
+      if (response.status >= 500 && attempt + 1 < attempts) {
+        await new Promise((resolve) => setTimeout(resolve, 600));
+        continue;
+      }
       return NextResponse.json(payload, { status: response.ok ? 200 : response.status });
     } catch {
       if (attempt + 1 < attempts)
