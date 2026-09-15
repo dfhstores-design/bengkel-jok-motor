@@ -1,6 +1,6 @@
 # Motokraf migration gap register — 2026-09-15
 
-Status: **PREPARATION IN PROGRESS — NOT READY FOR PRODUCTION APPROVAL**
+Status: **STAGING CANDIDATE DEPLOYED — NOT READY FOR PRODUCTION APPROVAL**
 
 This register refreshes the 2026-09-15 checkpoint against the current checkout and reachable services. Historical test and deployment evidence is identified separately from evidence refreshed in this session. No production resource or operational data was changed.
 
@@ -10,18 +10,20 @@ This register refreshes the 2026-09-15 checkpoint against the current checkout a
 |---|---|
 | Repository | `D:\Documents\AI-GPT\Aplikasi Bengkel Jok Motor\repo-checkout` |
 | Branch | `codex/operator-idle-timeout-2026-09-15` |
-| Candidate commit | `9a752f949f280b4954c5a51aeac738bef210cd67` — `Enforce role-specific session expiry` |
-| Scoped files in commit | `apps-script/Auth.gs`, `docs/AUTHORIZATION_CONTRACT_2026-09-12.md`, `tests/auth-session.test.mjs` |
-| Local validation | 7/7 Node tests passed; Next.js build completed (19 routes); Apps Script auth source syntax check passed; `git diff --check` passed before commit |
+| Candidate commit | `08e302a` — active-user login dropdown; includes `9a752f9` role-specific timeout, `d5da235` cookie expiry, and `c3cfd26` token response protection |
+| Staging Vercel preview | `https://aplikasi-bengkel-staging-20260912-2svr44pw1-dfhstores-projects.vercel.app` (`dpl_A3YPo5iRXkd7oMLKnoF9G4UiTwMu`, READY, Preview) |
+| Staging Apps Script | Version 27 — `Role-specific idle timeout staging 2026-09-15`; the preview `APPS_SCRIPT_API_URL` was replaced only in the Preview environment to point to this deployment |
+| Scoped files in current candidate | `apps-script/Auth.gs`; `frontend/app/api/auth/login/route.ts`; `frontend/app/page.tsx`; `frontend/app/globals.css`; auth contract/tests/gap documentation |
+| Local validation | 7/7 Node tests passed; Next.js build completed (19 routes) after auth and login UI changes; Apps Script auth source syntax check passed; `git diff --check` passed before each scoped commit |
 | Preserved worktree changes | `.gitignore`, `frontend/.gitignore`, checkpoint and three mobile screenshots remain outside this commit |
 | Drive checkpoint | Fetched checkpoint matches the local 2026-09-15 checkpoint content. The Drive folder listing confirms the checkpoint is present. |
 
 ## Refreshed observations
 
 - The expected `repo-checkout` exists under `D:\Documents\AI-GPT`; the initial desktop folder is a separate empty Git repository on `master` with no commits. No work was performed in that folder.
-- The staging Vercel project binding in the checkout identifies `aplikasi-bengkel-staging-20260912` (`prj_P10Kd25TvSOv9OIFBOPVYRwx0zRo`). The Vercel connector project list returned no projects; a direct deployment listing returned **403 Forbidden**. Deployment commit and environment lineage could not be read from that connector.
-- GET requests to the two checkpoint staging URLs and the production alias returned HTTP 200, but all three page titles identify **Aplikasi Bengkel — Sprint 5**. HTTP 200 is not evidence that this candidate is deployed or that its backend binding is correct.
-- The current staging Apps Script version, its deployed source checksum, staging Sheet/Drive identities, production Apps Script URL/version, production Sheet/media identities, current permissions, and current resource mappings were **not independently verified in this session**.
+- The staging Vercel project binding identifies `aplikasi-bengkel-staging-20260912` (`prj_P10Kd25TvSOv9OIFBOPVYRwx0zRo`). A new Preview deployment was created with the linked Vercel CLI; the Preview-only backend URL was replaced by the new staging Apps Script version 27 URL. No production environment variable was listed or changed.
+- The checkpoint staging alias still identifies itself as Sprint 5. The candidate review URL above is the only URL that proves the current staging deployment; HTTP 200 alone remains insufficient evidence.
+- The staging Apps Script project ID and version 27 deployment were verified through its isolated `clasp` configuration. Production Apps Script/Sheet/Drive identity, permissions, and resource mapping remain unverified in this session.
 - The latest production backup, checksum/read-back, row/ID/relationship baseline, and rollback lineage remain **historical evidence only** from 2026-09-11/12. They are not a current pre-migration backup.
 - Staging interaction evidence for authentication, user/PIN administration, operational flows, exports, chart filters, mobile layout, and latency is historical. It must be rerun against a preview/backend pair proven to use this candidate.
 
@@ -33,20 +35,20 @@ Product Foundation documents 00–10 and 09A were reviewed from the local DOCX s
 
 | Severity | Gap and evidence | Action needed | Status |
 |---|---|---|---|
-| Critical | Candidate is not deployed to staging. Live preview URLs still show Sprint 5; Vercel deployment listing is blocked with 403. | Restore authorized staging deployment inspection/deploy access; verify preview source commit and `APPS_SCRIPT_API_URL` points only to the isolated staging deployment before publishing a preview. | BLOCKED |
-| Critical | Operator two-hour expiry is committed and unit-tested locally, but staging Apps Script version/source is not refreshed or verified. No `clasp` executable was found in the available shell. | Provide an authorized Apps Script staging deployment path; publish a new staging version only after confirming staging project and datastore identity. Verify deployed source checksum/version. | BLOCKED |
+| Critical | Candidate deployment/backend pairing. | Current preview is READY and Preview-only `APPS_SCRIPT_API_URL` points to Apps Script version 27. Preserve this URL as the QA target; do not promote it. | CLOSED FOR STAGING |
+| Critical | Operator two-hour expiry. | Apps Script version 27 contains role-specific session expiry. Local boundary tests pass; controlled two-hour expiry has not been waited out in staging. | PASS LOCAL / NOT EXERCISED E2E |
 | Critical | Current production endpoint, Apps Script deployment/version, Sheet ID, media Drive mapping, and permissions are unverified. No write probe was made. | Complete authenticated read-only identity and access review through approved tooling. | OPEN |
 | Critical | Current timestamped production backup/export, read-back integrity, and current rollback mapping are unavailable. The 2026-09-11/12 backup is historical. | After staging acceptance and before any production migration, create a timestamped backup under the approved production procedure; verify file readability, expected tabs, hashes, unique IDs, counts, and relations. | OPEN — PRODUCTION GATE |
-| High | End-to-end Owner/Operator expiry, login/logout/session refresh, role denial, PIN change, and no-plaintext response/log checks have not been repeated against this commit. | Run on isolated staging with synthetic accounts only; retain existing 350 synthetic records and report their current markers/counts/relations without deleting them. | OPEN |
+| High | Owner/Operator login/logout/session refresh and response secrecy. | Browser login via active-user dropdown and keypad passed for both roles; logout returned to login state. Login JSON did not expose PIN or session token; cookies carry 6h Owner / 2h Operator. Server execution smoke tooling returned `NOT_FOUND`, controlled expiry and PIN-change role denial remain unproven. | PARTIAL |
 | High | Job/Payment/Close Job/media/Expense/history edit/audit and duplicate-submit checks are not tied to the candidate commit. | Repeat the complete Owner/Operator staging interaction matrix and verify immutable IDs/status/payment/relations and audit trail. | OPEN |
 | High | All period filters, chart-per-day values, tables/cards/reports consistency, PDF/Excel download content, and 390×844 layout are not freshly validated on this candidate. | Repeat on the authenticated candidate preview, capture fresh screenshots/download checks, and verify no horizontal overflow. | OPEN |
-| High | Latency and recovery after transient failures have no refreshed measurements. | Collect repeated login, dashboard/report, job/history read, and transient recovery timings; report median/range and failures without masking cold starts. | OPEN |
+| High | Latency and recovery after transient failures. | Login observed both a successful UI retry and failed direct/route attempts (about 4–47 seconds). Vercel error-log query returned no application logs. Collect a structured multi-run latency sample and investigate reliable POST relay behavior. | OPEN / BLOCKER FOR RELEASE |
 | Medium | Draft PR #1 remains open/draft at checkpoint commit `74c0788`; it is not this candidate. | Prepare a review branch/PR update only after staging validation and bind all evidence to the exact candidate commit. | OPEN |
 | Medium | Existing uncommitted `.gitignore` changes and three untracked screenshots were retained and excluded from the scoped candidate commit. | Review or keep separate later; do not silently discard or mix them with product changes. | PRESERVED |
 
 ## Migration decision
 
-The local role-specific timeout change is reviewable and locally validated. The overall migration is **not ready for deployment approval** because the candidate cannot yet be tied to a verified staging deployment/backend, the full staging acceptance matrix is stale, and the production identity/backup/rollback evidence must be refreshed. Production deployment remains unauthorized and was not attempted.
+The candidate is now reviewable on a verified isolated staging pair. It is **not ready for production deployment approval** because controlled expiry, server-side role/PIN tests, the full operational/period/export/mobile matrix, reliable POST latency, and the current production identity/backup/rollback gates remain incomplete. Production deployment remains unauthorized and was not attempted.
 
 ## Production safety
 
