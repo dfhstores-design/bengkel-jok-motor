@@ -8,10 +8,10 @@ This report records the candidate actually deployed to the isolated staging prev
 
 | Item | Verified now |
 |---|---|
-| Git branch and commit | `codex/operator-idle-timeout-2026-09-15` at `5dd9955` (`Repair monthly report PDF export`) |
-| Vercel preview | `https://aplikasi-bengkel-staging-20260912-40zi91glo-dfhstores-projects.vercel.app` |
-| Vercel deployment | `dpl_FcBfGgtjo2DPLJ6afMkasAH2xGGi`, Preview, READY |
-| Staging Apps Script | Version 27, `Role-specific idle timeout staging 2026-09-15` |
+| Git branch and commit | `codex/operator-idle-timeout-2026-09-15` at `8f0c529` (`Retry idempotent staging mutations`) |
+| Vercel preview | `https://aplikasi-bengkel-staging-20260912-iadi01rsv-dfhstores-projects.vercel.app` |
+| Vercel deployment | `dpl_H9hwFwN5CgxkV4WxorhV1gmTq2rk`, Preview, READY |
+| Staging Apps Script | Version 28, `Payment-date report periods staging 2026-09-15` |
 | Backend pairing | Preview-only backend configuration was set to the version-27 staging deployment. Production configuration was not changed. |
 | Scope | Login/auth resilience only. Owner and Operator dashboard files were not changed. |
 
@@ -32,6 +32,8 @@ This report records the candidate actually deployed to the isolated staging prev
 | Mobile login layout | PASS, prior candidate UI-equivalent evidence | 390×844 screenshot showed no horizontal overflow. The final retry-only commit does not change layout. |
 | Monthly PDF export | PASS LOCAL / PREVIEW READY | A byte-accurate, multi-page PDF generator replaced the rejected legacy file. QPDF checked the generated PDF successfully. |
 | Monthly Excel export | PASS LOCAL / PREVIEW READY | Summary Bulanan and the detailed Job CLOSED table contain the same financial values as the PDF. |
+| Payment-date period consistency | PASS LOCAL / PREVIEW READY | Report total, report history, and closed-job filtering use the linked Payment date; `Semua data` spans from 1900-01-01. |
+| Idempotent POST recovery | PASS LOCAL / PREVIEW READY | A transient server failure retries once for an idempotency-keyed mutation. Non-idempotent POST remains single-attempt. |
 
 ## Known failures and unexercised checks
 

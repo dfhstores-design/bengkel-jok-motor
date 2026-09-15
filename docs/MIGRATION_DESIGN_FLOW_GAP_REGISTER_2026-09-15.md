@@ -10,11 +10,11 @@ This register refreshes the 2026-09-15 checkpoint against the current checkout a
 |---|---|
 | Repository | `D:\Documents\AI-GPT\Aplikasi Bengkel Jok Motor\repo-checkout` |
 | Branch | `codex/operator-idle-timeout-2026-09-15` |
-| Candidate commit | `5dd9955` — repaired monthly PDF export and added monthly summary to PDF/Excel; includes the earlier auth candidate commits |
-| Staging Vercel preview | `https://aplikasi-bengkel-staging-20260912-40zi91glo-dfhstores-projects.vercel.app` (`dpl_FcBfGgtjo2DPLJ6afMkasAH2xGGi`, READY, Preview) |
-| Staging Apps Script | Version 27 — `Role-specific idle timeout staging 2026-09-15`; the preview `APPS_SCRIPT_API_URL` was replaced only in the Preview environment to point to this deployment |
+| Candidate commit | `8f0c529` — safe retry for idempotent mutation POST; includes payment-date period alignment, repaired monthly PDF/Excel export, and earlier auth candidate commits |
+| Staging Vercel preview | `https://aplikasi-bengkel-staging-20260912-iadi01rsv-dfhstores-projects.vercel.app` (`dpl_H9hwFwN5CgxkV4WxorhV1gmTq2rk`, READY, Preview) |
+| Staging Apps Script | Version 28 — `Payment-date report periods staging 2026-09-15`; the preview `APPS_SCRIPT_API_URL` was replaced only in the Preview environment to point to this deployment |
 | Scoped files in current candidate | `apps-script/Auth.gs`; auth login/user routes; `frontend/app/page.tsx`; `frontend/app/globals.css`; auth contract/tests/gap documentation |
-| Local validation | 9/9 Node tests passed, including QPDF structural validation of a multi-page generated report and Excel content assertions; Vercel completed the Next.js build (19 routes); Apps Script auth source syntax check passed; `git diff --check` passed before each scoped commit |
+| Local validation | 13/13 Node tests passed, including QPDF structural validation, Excel content assertions, period-alignment cases, and idempotent POST retry behavior; Vercel completed the Next.js build (19 routes); Apps Script auth source syntax check passed; `git diff --check` passed before each scoped commit |
 | Preserved worktree changes | `.gitignore`, `frontend/.gitignore`, checkpoint and three mobile screenshots remain outside this commit |
 | Drive checkpoint | Fetched checkpoint matches the local 2026-09-15 checkpoint content. The Drive folder listing confirms the checkpoint is present. |
 
