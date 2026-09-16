@@ -31,10 +31,27 @@ The local baseline workbook-integrity SHA-256 is
 No synthetic records were created. No legacy operational data was edited,
 deleted, moved, or redirected.
 
+## Isolated frontend candidate (2026-09-16)
+
+| Check | Result |
+| --- | --- |
+| New Vercel project identity | PASS — the separate `motokraf` project was created; no existing Motokraf, staging, or legacy project setting was modified. |
+| Backend binding | PASS — only the new backend URL is held as the encrypted, server-side `APPS_SCRIPT_API_URL` preview variable. It is not bundled into the browser or committed to source. |
+| Candidate build | PASS — the unchanged frontend source completed a Next.js production build. |
+| Preview deployment | PASS — `https://motokraf-jf031x341-dfhstores-projects.vercel.app` is READY as a Vercel Preview deployment. |
+| Login identity | PASS — browser verification shows the Motokraf login page and exactly `Owner · Owner` and `Operator · Operator`; no console warnings or errors were observed. |
+| PIN/login transaction | NOT EXERCISED — PINs remain known only to the user, so no automated login was attempted. |
+| First deployment correction | RESOLVED — the initially created Vercel project used the `Other` preset and returned 404. Its setting was corrected to Next.js, then the working Preview above was created. This did not touch the legacy URL, legacy deployment, or either Sheet's operational data. |
+
+The earlier 404 deployment is retained only as Vercel history. It has no
+backend configuration in the production environment and is not a release
+candidate. The working candidate is the Preview URL above.
+
 ## Remaining release gates
 
-1. Deploy and validate an isolated candidate frontend that points only to the
-   new backend, then run the approved end-to-end tests with real tenant data.
+1. Run the approved login, session, role-denial, and operational flows on the
+   isolated candidate with real tenant data. This requires the account holder
+   to enter the PINs without sharing them.
 2. Confirm the Sheet sharing policy before release. It is currently readable
    through its link, so restricting access to the intended administrators is a
    separate, user-controlled permission decision.
