@@ -6,12 +6,20 @@
 https://motokraf.vercel.app. The legacy application, legacy Apps Script, and
 legacy Sheet were not changed.
 
+## Metadata update
+
+The document title used by browser tabs and link previews is now
+`Aplikasi Bengkel Motokraf`. This is a metadata-only update: no dashboard,
+operational flow, backend, Sheet content, or authentication setting changed.
+The active production deployment after this update is
+`dpl_AB4N3aWfDhRzdWcJs7vJJw94VWNb`, READY.
+
 ## Release identity
 
 | Item | Verified value |
 | --- | --- |
 | Public URL | https://motokraf.vercel.app |
-| Vercel deployment | `dpl_5Rpy6LgrMumYNu1hpkdDZ1y29tam`, READY, Production |
+| Vercel deployment | `dpl_AB4N3aWfDhRzdWcJs7vJJw94VWNb`, READY, Production |
 | Frontend source lineage | isolated candidate built from repository branch `codex/operator-idle-timeout-2026-09-15`; latest review record before release `3bdf26f` |
 | Backend | isolated Apps Script version 6 only; endpoint intentionally omitted from this report |
 | Data source | new `Data Penjualan Motokraf` Sheet only |
