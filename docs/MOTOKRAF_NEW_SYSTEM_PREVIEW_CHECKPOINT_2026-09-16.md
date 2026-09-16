@@ -20,6 +20,13 @@ unchanged.
 | PIN secrecy | PASS — no PIN was entered, stored, logged, or copied during this stage. |
 | Legacy system | UNCHANGED — no legacy deployment, source, Sheet cell, schema, or backend route was changed. |
 
+## User acceptance update
+
+The account holder tested the isolated Preview and reported **PASS**. This is
+recorded as user-performed acceptance; PIN values were not disclosed or
+captured. The result covers the Owner and Operator login paths made available
+by the candidate.
+
 ## Deployment lineage
 
 The first deployment of the new project was 404 because Vercel created the
@@ -30,11 +37,9 @@ and is not a release candidate.
 
 ## Open gates
 
-1. Owner-controlled PIN entry is required to exercise real login, logout,
-   session refresh, role denial, and the approved operational flows.
-2. The new Sheet remains link-readable. Its production sharing policy needs a
+1. The new Sheet remains link-readable. Its production sharing policy needs a
    separate explicit owner decision before public release.
-3. The final public address remains a release choice: a Motokraf subdomain or
+2. The final public address remains a release choice: a Motokraf subdomain or
    `motokraf.vercel.app`. No promotion to either has been performed.
 
 ## Rollback
