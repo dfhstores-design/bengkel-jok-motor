@@ -15,40 +15,32 @@ remain unchanged and continue to operate independently.
 | Workbook structure | PASS — `Jobs`, `Payments`, `Expenses`, and `Media` are present. Their total row/column counts are respectively 40/13, 40/10, 27/15, and 1/15. |
 | Legacy-to-new comparison | PASS — tab ordering, headers, and every exported cell matched a fresh read-only export from the legacy Sheet. |
 | Identity and link invariants | PASS — tested IDs are unique; Payment-to-Job references are intact. |
-| New Apps Script project | PASS — a distinct standalone Apps Script project was created and received the five v29 source files. Its version 2 deployment is separate from the legacy backend and has no configured data-store or media-folder properties. |
+| New Apps Script project | PASS — a distinct standalone Apps Script project was created, authorized by its owner, and received the five v29 source files. Its version 4 web deployment is separate from the legacy backend and points only to the new data store. |
+| New authentication and audit schema | PASS — the approved `AuthUsers` (7 columns) and `AuditLog` (10 columns) tabs were added to the new Sheet only, each with headers and no data rows. |
+| New media configuration | PASS — a separate media root with Jobs, Expenses, and Payments folders was created and stored only in the new backend's Script Properties. |
+| New backend verification | PASS — anonymous endpoint reaches the v4 backend, returns an empty login-user list, and no longer recognizes the one-time initializer action. |
 | Legacy application and Sheet | UNCHANGED — no route, deployment, Sheet cell, schema, or Apps Script source in the legacy system was changed. |
 
 The local baseline workbook-integrity SHA-256 is
 `ddda8103d60fed17857a1d4674b71018730fe742c69c31eabfb81d2d547ef288`.
-
-## Explicitly deferred changes
-
-The approved `AuthUsers` and `AuditLog` tabs have not yet been added. They
-will be created only in the new Sheet, after the new backend has its final
-configuration and its initial Owner account setup is agreed.
 
 No synthetic records were created. No legacy operational data was edited,
 deleted, moved, or redirected.
 
 ## Remaining release gates
 
-1. Authorize the new Apps Script project once as its owner. Until that happens,
-   Google rejects anonymous web requests before the backend code runs. No
-   business endpoint is usable yet.
-2. Create a separate media-folder hierarchy and configure the new Apps Script
-   project exclusively with the new Sheet and new folders.
-3. Establish the initial Owner account without recording a plaintext PIN in
+1. Establish the initial Owner account without recording a plaintext PIN in
    source code, reports, logs, or this repository.
-4. Create and verify `AuthUsers` and `AuditLog` only in the new Sheet.
-5. Deploy and validate an isolated candidate frontend that points only to the
+2. Deploy and validate an isolated candidate frontend that points only to the
    new backend, then run the approved end-to-end tests with real tenant data.
-6. Confirm the Sheet sharing policy before release. It is currently readable
+3. Confirm the Sheet sharing policy before release. It is currently readable
    through its link, so restricting access to the intended administrators is a
    separate, user-controlled permission decision.
-7. Choose the post-validation public address: a Motokraf subdomain or a Vercel
+4. Choose the post-validation public address: a Motokraf subdomain or a Vercel
    address. The legacy URL remains available in either case.
 
 ## Rollback position
 
-The new application has no public endpoint or traffic. Rollback at this stage
-is simply to leave it unused; the legacy system remains the active system.
+The new backend has an isolated endpoint and no frontend traffic. Rollback at
+this stage is to leave the new endpoint unused; the legacy system remains the
+active system.
