@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Aplikasi Bengkel — Sprint 5",
+  title: "Aplikasi Bengkel Motokraf",
   description: "Dashboard, riwayat, dan ringkasan operasional bengkel",
 };
 
