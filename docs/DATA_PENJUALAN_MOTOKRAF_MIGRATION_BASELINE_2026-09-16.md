@@ -18,7 +18,11 @@ remain unchanged and continue to operate independently.
 | New Apps Script project | PASS — a distinct standalone Apps Script project was created, authorized by its owner, and received the five v29 source files. Its version 4 web deployment is separate from the legacy backend and points only to the new data store. |
 | New authentication and audit schema | PASS — the approved `AuthUsers` (7 columns) and `AuditLog` (10 columns) tabs were added to the new Sheet only, each with headers and no data rows. |
 | New media configuration | PASS — a separate media root with Jobs, Expenses, and Payments folders was created and stored only in the new backend's Script Properties. |
-| New backend verification | PASS — anonymous endpoint reaches the v4 backend, returns an empty login-user list, and no longer recognizes the one-time initializer action. |
+| New backend pre-provisioning verification | PASS — the anonymous endpoint reached the v4 backend, returned an empty login-user list, and no longer recognized the data-store initializer action. |
+| Initial accounts | PASS — `owner` (OWNER) and `operator` (OPERATOR) were provisioned through the one-time local form. PINs were hashed before storage and were not retained in source, reports, logs, or the form after completion. |
+| Provisioning audit | PASS — the new `AuditLog` contains one initial-provisioning record. |
+| Post-provisioning integrity | PASS — all four operational tab hashes and row/column counts still match the pre-provisioning baseline. |
+| Backend release state | PASS — version 6 is the active new-backend deployment; the initial-user route is absent. |
 | Legacy application and Sheet | UNCHANGED — no route, deployment, Sheet cell, schema, or Apps Script source in the legacy system was changed. |
 
 The local baseline workbook-integrity SHA-256 is
@@ -29,14 +33,12 @@ deleted, moved, or redirected.
 
 ## Remaining release gates
 
-1. Establish the initial Owner account without recording a plaintext PIN in
-   source code, reports, logs, or this repository.
-2. Deploy and validate an isolated candidate frontend that points only to the
+1. Deploy and validate an isolated candidate frontend that points only to the
    new backend, then run the approved end-to-end tests with real tenant data.
-3. Confirm the Sheet sharing policy before release. It is currently readable
+2. Confirm the Sheet sharing policy before release. It is currently readable
    through its link, so restricting access to the intended administrators is a
    separate, user-controlled permission decision.
-4. Choose the post-validation public address: a Motokraf subdomain or a Vercel
+3. Choose the post-validation public address: a Motokraf subdomain or a Vercel
    address. The legacy URL remains available in either case.
 
 ## Rollback position
